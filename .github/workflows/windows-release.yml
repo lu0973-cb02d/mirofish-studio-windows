@@ -19,6 +19,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: windows-release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -28,6 +32,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -53,7 +60,7 @@ jobs:
       - name: Test source and build UI
         shell: pwsh
         run: |
-          uv run --project backend python -m pytest -q
+          uv run --project backend --frozen python -m pytest -q
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/audit-release.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -95,6 +102,10 @@ jobs:
           [IO.File]::WriteAllText((Join-Path (Get-Location) 'SHA256SUMS.txt'), (($lines -join "`n") + "`n"), [Text.Encoding]::ASCII)
           Get-Content SHA256SUMS.txt
 
+      - name: Install and smoke test full package
+        shell: pwsh
+        run: ./scripts/test-windows-installer.ps1
+
       - uses: actions/upload-artifact@v4
         with:
           name: mirofish-studio-windows-${{ github.run_id }}
@@ -114,6 +125,11 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content 'desktop/package.json' -Raw | ConvertFrom-Json).version
+          gh release view "$env:RELEASE_TAG" --json tagName | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create "$env:RELEASE_TAG" --draft --verify-tag --title "MiroFish Studio $version" --notes-file RELEASE_NOTES.md
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
           gh release upload "$env:RELEASE_TAG" --clobber `
             "dist-installers/panel/MiroFish-Studio-Panel-$version-Setup.exe" `
             "dist-installers/panel/MiroFish-Studio-Panel-$version-Portable.exe" `
@@ -123,5 +139,11 @@ jobs:
             "dist-installers/full/MiroFish-Studio-Full-$version-Setup.exe.blockmap" `
             SHA256SUMS.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $release = gh release view "$env:RELEASE_TAG" --json assets | ConvertFrom-Json
+          foreach ($line in Get-Content SHA256SUMS.txt) {
+            $hash, $name = $line -split '  ', 2
+            $asset = @($release.assets | Where-Object name -eq $name)
+            if ($asset.Count -ne 1 -or $asset[0].digest -ne "sha256:$hash") { throw "Remote checksum mismatch: $name" }
+          }
           gh release edit "$env:RELEASE_TAG" --draft=false --notes-file RELEASE_NOTES.md
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -77,3 +77,4 @@ backend/uploads/
 *.key
 *.p12
 *.pfx
+SHA256SUMS.txt

@@ -1,4 +1,0 @@
-024344e7aec41ac6ccf0d54ef7ae1d6f914ab693c556b3035136c8ff8f2f59c1  MiroFish-Studio-Panel-1.1.0-Setup.exe
-3390080a99886e58ceab36460079b755171ca43cc68c6f5cccb4b3acd56c5151  MiroFish-Studio-Panel-1.1.0-Portable.exe
-971fbf583c2bc87ab5f360c46c61dacbdf16ffc351e2199433709f2c0469f5ca  MiroFish-Studio-Full-1.1.0-Setup.exe
-25bea6b4c0216e260189a4f33fd72c9084acb2eb6864dd2e7ea91fc83d708d6f  MiroFish-Studio-Full-1.1.0-Portable.exe

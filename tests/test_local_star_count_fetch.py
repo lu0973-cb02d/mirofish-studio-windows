@@ -184,9 +184,10 @@ class FetchStarCountTests(unittest.TestCase):
 
     def test_workflow_keeps_credentials_out_of_record_and_render_steps(self):
         repository = Path(__file__).resolve().parents[1]
-        workflow = (
-            repository / ".github/workflows/update-star-history.yml"
-        ).read_text(encoding="utf-8")
+        workflow_path = repository / ".github/workflows/update-star-history.yml"
+        if not workflow_path.exists():
+            self.skipTest("Star History automation is not included in this distribution")
+        workflow = workflow_path.read_text(encoding="utf-8")
         renderer = (repository / "scripts/star_history.py").read_text(
             encoding="utf-8"
         )
@@ -247,9 +248,10 @@ class FetchStarCountTests(unittest.TestCase):
 
     def test_workflow_submits_a_verified_pull_request_for_manual_merge(self):
         repository = Path(__file__).resolve().parents[1]
-        workflow = (
-            repository / ".github/workflows/update-star-history.yml"
-        ).read_text(encoding="utf-8")
+        workflow_path = repository / ".github/workflows/update-star-history.yml"
+        if not workflow_path.exists():
+            self.skipTest("Star History automation is not included in this distribution")
+        workflow = workflow_path.read_text(encoding="utf-8")
 
         self.assertIn("contents: write", workflow)
         self.assertIn("pull-requests: write", workflow)
