@@ -5,6 +5,8 @@
   "directories": { "output": "../dist-installers/panel", "buildResources": "resources" },
   "files": ["main.cjs", "preload.cjs", "setup.html", "package.json"],
   "extraResources": [
+    { "from": "../LICENSE", "to": "LICENSE-AGPL-3.0.txt" },
+    { "from": "../NOTICE.md", "to": "NOTICE.md" },
     { "from": "resources/mirofish-logo.ico", "to": "mirofish-logo.ico" },
     { "from": "../frontend/dist", "to": "frontend/dist" }
   ],

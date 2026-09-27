@@ -5,6 +5,8 @@
   "directories": { "output": "../dist-installers/full", "buildResources": "resources" },
   "files": ["main.cjs", "preload.cjs", "setup.html", "package.json"],
   "extraResources": [
+    { "from": "../LICENSE", "to": "LICENSE-AGPL-3.0.txt" },
+    { "from": "../NOTICE.md", "to": "NOTICE.md" },
     { "from": "resources/mirofish-logo.ico", "to": "mirofish-logo.ico" },
     { "from": "../packaging/full-runtime/mirofish", "to": "mirofish", "filter": ["**/*", "!backend/.venv/**", "!backend/uploads/**", "!studio_data/**", "!record_backups/**", "!.env", "!**/__pycache__/**", "!**/*.pyc"] },
     { "from": "../packaging/full-runtime/runtime", "to": "mirofish/runtime", "filter": ["**/*", "!**/__pycache__/**"] }

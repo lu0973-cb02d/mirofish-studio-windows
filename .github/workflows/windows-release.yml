@@ -88,6 +88,11 @@ jobs:
         run: |
           $version = (Get-Content 'desktop/package.json' -Raw | ConvertFrom-Json).version
           if ($env:RELEASE_TAG -ne "v$version") { throw "Release tag and package version differ" }
+          foreach ($variant in @('panel','full')) {
+            foreach ($notice in @('LICENSE-AGPL-3.0.txt','NOTICE.md')) {
+              if (!(Test-Path "dist-installers/$variant/win-unpacked/resources/$notice")) { throw "Missing license notice: $variant/$notice" }
+            }
+          }
           $files = @(
             "dist-installers/panel/MiroFish-Studio-Panel-$version-Setup.exe",
             "dist-installers/panel/MiroFish-Studio-Panel-$version-Portable.exe",
