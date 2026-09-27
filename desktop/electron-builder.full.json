@@ -3,7 +3,7 @@
   "productName": "MiroFish Studio（全量版）",
   "copyright": "MiroFish",
   "directories": { "output": "../dist-installers/full", "buildResources": "resources" },
-  "files": ["main.cjs", "preload.cjs", "setup.html", "package.json"],
+  "files": ["main.cjs", "preload.cjs", "setup.html", "package.json", "resources/mirofish-logo.png"],
   "extraResources": [
     { "from": "../LICENSE", "to": "LICENSE-AGPL-3.0.txt" },
     { "from": "../NOTICE.md", "to": "NOTICE.md" },

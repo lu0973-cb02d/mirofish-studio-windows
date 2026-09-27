@@ -4,9 +4,9 @@ if ($env:GITHUB_ACTIONS -ne 'true') { throw 'Run this installation test on a dis
 $version = (Get-Content 'desktop/package.json' -Raw | ConvertFrom-Json).version
 $testRoot = Join-Path $env:RUNNER_TEMP 'mirofish-installer-qa'
 $installRoot = Join-Path $testRoot 'installed'
-$env:APPDATA = Join-Path $testRoot 'appdata'
-$env:LOCALAPPDATA = Join-Path $testRoot 'localappdata'
-New-Item -ItemType Directory -Force -Path $env:APPDATA,$env:LOCALAPPDATA | Out-Null
+# Electron uses the Windows known folder rather than an overridden APPDATA.
+# This runner is disposable; use its real user-data location for the assertion.
+$appDataRoot = [Environment]::GetFolderPath('ApplicationData')
 $installer = (Resolve-Path "dist-installers/full/MiroFish-Studio-Full-$version-Setup.exe").Path
 $install = Start-Process -FilePath $installer -ArgumentList @('/S',"/D=$installRoot") -WindowStyle Hidden -Wait -PassThru
 if ($install.ExitCode -ne 0) { throw "Installer exited with $($install.ExitCode)" }
@@ -32,7 +32,7 @@ try {
   try { Invoke-RestMethod 'http://127.0.0.1:3888/studio-api/quit' -Method Post -ContentType 'application/json' -Headers @{'X-MiroFish-Studio'='1'} -Body '{}' -TimeoutSec 5 | Out-Null } catch {}
   Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($installRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 }
-$dataRoot = Join-Path $env:APPDATA 'mirofish-studio-desktop/data'
+$dataRoot = Join-Path $appDataRoot 'mirofish-studio-desktop/data'
 if (!(Test-Path -LiteralPath (Join-Path $dataRoot 'studio_data/desktop.log'))) { throw 'Actual desktop log is missing from the expected user data directory' }
 $sentinel = Join-Path $dataRoot 'qa-preserve.txt'
 New-Item -ItemType Directory -Force -Path $dataRoot | Out-Null

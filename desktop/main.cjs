@@ -123,7 +123,18 @@ function iconPath() {
   return candidates.find(fs.existsSync) || candidates[0]
 }
 function createWindow() {
-  windowRef = new BrowserWindow({ width: 1440, height: 940, minWidth: 1000, minHeight: 680, show: false, title: PRODUCT, icon: iconPath(), backgroundColor: '#f6f7f5', autoHideMenuBar: true, webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: false, spellcheck: false } })
+  windowRef = new BrowserWindow({ width: 1440, height: 940, minWidth: 1000, minHeight: 680, show: false, title: PRODUCT, icon: iconPath(), backgroundColor: '#f4f7fb', titleBarStyle: 'hidden', titleBarOverlay: { color: '#f4f7fb', symbolColor: '#40506a', height: 40 }, autoHideMenuBar: true, webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: false, spellcheck: false } })
+  // A panel upgrade can reuse an older local service. Keep its window draggable
+  // until that service is restarted and begins serving the current frontend.
+  windowRef.webContents.on('did-finish-load', () => {
+    windowRef?.webContents.insertCSS(`
+      body:not(:has(.desktop-titlebar,.titlebar)) { padding-top:40px!important; }
+      body:not(:has(.desktop-titlebar,.titlebar))::before { content:'MiroFish Studio'; position:fixed; inset:0 0 auto; height:40px; box-sizing:border-box; padding:0 154px 0 16px; display:flex; align-items:center; background:#f4f7fb; color:#40506a; border-bottom:1px solid #e2e8f0; font:600 12px 'Segoe UI','Microsoft YaHei',sans-serif; z-index:10000; -webkit-app-region:drag; }
+      body:not(:has(.desktop-titlebar,.titlebar)) .studio-sidebar { top:40px!important; height:calc(100vh - 40px)!important; }
+      body:not(:has(.desktop-titlebar,.titlebar)) .topbar { top:40px!important; }
+      body:not(:has(.desktop-titlebar,.titlebar)) .main-view { height:calc(100vh - 40px)!important; }
+    `).catch(() => {})
+  })
   windowRef.webContents.setWindowOpenHandler(({ url }) => ({ action: url.startsWith(LOCAL_URL) ? 'allow' : 'deny' }))
   windowRef.webContents.on('will-navigate', (event, url) => { if (!url.startsWith(LOCAL_URL)) event.preventDefault() })
   windowRef.webContents.on('will-attach-webview', event => { event.preventDefault() })

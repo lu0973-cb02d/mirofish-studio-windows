@@ -1,221 +1,97 @@
-## Windows 桌面版：MiroFish Studio
+# MiroFish Studio for Windows
 
-本改版提供一个面向 Windows 的本地桌面工作台，适合不想维护 Node/Python 环境的用户。它把模型预设、Zep 连接、推演记录、备份恢复和引擎控制集中在一个类似 Clash 的功能型窗口中。
+面向 Windows 的 MiroFish 桌面工作台。通过独立软件窗口管理模型预设、Zep 连接、推演引擎和记录备份，提供托盘与窗口操作，无需打开浏览器控制台。
 
-### 下载安装
+本仓库是基于 [MiroFish](https://github.com/666ghj/MiroFish) 的**非官方 Windows 改版**。正式使用入口是桌面应用，安装包通过本仓库的 GitHub Releases 分发。
 
-从 [Releases](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) 下载：
+[下载安装](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) · [使用说明](./STUDIO_README.md) · [版本说明](./RELEASE_NOTES.md) · [来源与许可证](./NOTICE.md)
 
-- **Panel Setup**：只安装控制面板，启动时选择已有的 MiroFish 目录。
-- **Full Setup**：连同 MiroFish 源码和内置 Python 运行环境一起安装，适合全新 Windows 环境。
-- 两种版本都提供便携版；安装包不包含任何 API Key、Zep 密钥或个人推演记录。
+![MiroFish Studio Windows 桌面工作台](./static/image/studio-desktop.png)
 
-### 许可证与来源
+## 选择安装包
 
-仓库主体按 [AGPL-3.0](./LICENSE) 发布。MiroFish 核心来源、桌面工作台的改动、安装脚本和依赖边界见 [NOTICE.md](./NOTICE.md)。这是基于上游 MiroFish 的 Windows 改版，不会把上游 AGPL 代码重新标成 MIT。
+支持 Windows x64。首次使用推荐 **Full Setup**。
 
-详细发布说明见 [RELEASE_NOTES.md](./RELEASE_NOTES.md)，本地工作台使用说明见 [STUDIO_README.md](./STUDIO_README.md)。
+| Release 附件 | 用途 | 运行条件 |
+| --- | --- | --- |
+| MiroFish-Studio-Full-版本号-Setup.exe | 安装完整桌面版，创建快捷方式 | 包含 Studio、MiroFish 核心、Python 及依赖，无需另装开发环境 |
+| MiroFish-Studio-Full-版本号-Portable.exe | 完整桌面版免安装运行 | 首次启动需要解压内置运行环境；数据仍保存在当前 Windows 用户目录 |
+| MiroFish-Studio-Panel-版本号-Setup.exe | 只安装桌面控制面板 | 需要已有的 Studio 兼容工作目录和后端运行环境 |
+| MiroFish-Studio-Panel-版本号-Portable.exe | 控制面板免安装运行 | 与 Panel Setup 相同，首次启动选择兼容工作目录 |
 
-<div align="center">
+**Panel 不能直接配合未经适配的上游原版目录使用。** 所选目录需包含本改版的 local_studio/server.py、backend 和已安装依赖的 Python 环境；没有这些文件时请选择 Full。
 
-<img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>
+在 [Releases](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) 下载 EXE 附件。Source code 压缩包是源码，不是安装包。安装包当前未使用发布者证书签名，Windows 可能显示未知发布者提示；可使用同一 Release 附带的 SHA256SUMS.txt 核验下载文件。
 
-<a href="https://trendshift.io/repositories/16144" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16144" alt="666ghj%2FMiroFish | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+## 主要功能
 
-简洁通用的群体智能引擎，预测万物
-</br>
-<em>A Simple and Universal Swarm Intelligence Engine, Predicting Anything</em>
+- **桌面工作台**：查看引擎状态，启动、停止或重启；深色侧栏、清晰状态、悬停与按下反馈、页面切换动画，支持系统减少动态效果设置。
+- **模型预设**：保存多组 Base URL、API Key 和模型名称，一键切换；获取服务商模型列表，也可手动填写。接口需兼容 OpenAI 聊天接口。
+- **Zep 连接**：保存多个连接、按项目分组；遇到授权拒绝、限流或暂时故障时冷却异常连接，并尝试符合条件的备用密钥。
+- **推演流程**：材料输入、图谱构建、环境准备、双线推演、报告与采访；集中查看本机项目和报告。
+- **记录备份**：手动备份、按变化自动备份、文件哈希校验、恢复前回退备份及恢复失败回滚。
 
-<a href="https://www.shanda.com/" target="_blank"><img src="./static/image/shanda_logo.png" alt="666ghj%2FMiroFish | Shanda" height="40"/></a>
+## 第一次使用
 
-[![GitHub Stars](https://img.shields.io/github/stars/666ghj/MiroFish?style=flat-square&color=DAA520)](https://github.com/666ghj/MiroFish/stargazers)
-[![GitHub Watchers](https://img.shields.io/github/watchers/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/watchers)
-[![GitHub Forks](https://img.shields.io/github/forks/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/network)
-[![Docker](https://img.shields.io/badge/Docker-Build-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/666ghj/MiroFish)
+1. 安装 Full Setup 并打开 **MiroFish Studio（全量版）**；Panel 用户打开软件后先选择兼容工作目录。
+2. 在「模型预设」添加名称、服务地址和 API Key，点击「获取模型」或手动输入模型名，测试并保存，再「设为当前」。
+3. 在「Zep 连接」保存自己的密钥并设为当前。需要轮换时添加备用连接，开启自动切换。
+4. 回到「工作台」启动推演引擎，再点击「新建推演」，填写材料和研究问题。建议先用少量轮次确认自己的服务配置。
+5. 在「记录与备份」查看项目和备份。关闭窗口会留在托盘；需要停止后台服务时，使用软件或托盘中的退出操作。
 
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white)](http://discord.gg/ePf5aPaHnA)
-[![X](https://img.shields.io/badge/X-Follow-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/mirofish_ai)
-[![Instagram](https://img.shields.io/badge/Instagram-Follow-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/mirofish_ai/)
+连接测试会发送实际请求，模型测试和推演可能产生服务商费用。本版本未使用真实模型或 Zep 密钥完成付费推演验收；请先测试你自己的接口配置。
 
-[English](./README.md) | [中文文档](./README-ZH.md)
+同一 Zep 连接组中的备用密钥必须能够访问同一项目和原图谱。不同账号或项目的密钥请分组保存；切换账号不能自动迁移云端图谱。任务进行中不能切换当前配置或重启引擎；已完成推演保留的采访环境在停止、重启或退出后会关闭。
 
-</div>
+## 隐私与数据位置
 
-## ⚡ Overview
+API Key 使用当前 Windows 用户的 DPAPI 加密保存，不在编辑界面回显已有密钥。调用模型与 Zep 时，密钥和必要材料会发送给你配置的服务，因此请使用可信的服务地址。发布范围是程序源码、界面和通用依赖，首次使用需自行填写连接配置。
 
-**MiroFish** is a next-generation AI prediction engine powered by multi-agent technology. By extracting seed information from the real world (such as breaking news, policy drafts, or financial signals), it automatically constructs a high-fidelity parallel digital world. Within this space, thousands of intelligent agents with independent personalities, long-term memory, and behavioral logic freely interact and undergo social evolution. You can inject variables dynamically from a "God's-eye view" to precisely deduce future trajectories — **rehearse the future in a digital sandbox, and win decisions after countless simulations**.
+Full 版数据根目录为 %APPDATA%\mirofish-studio-desktop\data；Panel 使用所选工作目录保存数据。以下路径相对于各自的数据根目录：
 
-> You only need to: Upload seed materials (data analysis reports or interesting novel stories) and describe your prediction requirements in natural language</br>
-> MiroFish will return: A detailed prediction report and a deeply interactive high-fidelity digital world
+| 路径 | 内容 |
+| --- | --- |
+| studio_data | 模型与 Zep 配置、运行信息 |
+| backend/uploads | 项目材料、推演记录与报告 |
+| record_backups | 本地记录备份 |
 
-### Our Vision
+Full Portable 的数据不会随 EXE 文件一起搬迁。换电脑或换 Windows 用户时，应通过记录备份迁移数据并重新填写密钥；不要将 .env、配置、上传文件或备份提交到公开仓库。
 
-MiroFish is dedicated to creating a swarm intelligence mirror that maps reality. By capturing the collective emergence triggered by individual interactions, we break through the limitations of traditional prediction:
+## 备份恢复与中断边界
 
-- **At the Macro Level**: We are a rehearsal laboratory for decision-makers, allowing policies and public relations to be tested at zero risk
-- **At the Micro Level**: We are a creative sandbox for individual users — whether deducing novel endings or exploring imaginative scenarios, everything can be fun, playful, and accessible
+工作台运行时每 15 分钟检查记录变化，有变化才自动备份；保留最近 20 份自动备份，手动备份不会自动清理。恢复前需停止引擎；系统先备份当前记录，再校验并恢复所选备份。
 
-From serious predictions to playful simulations, we let every "what if" see its outcome, making it possible to predict anything.
+短暂断线或重新打开工作台后，可以读取仍在运行的任务和已保存记录。**程序崩溃或电脑关机后，不保证从中间轮次续跑**；恢复记录也不等于恢复内存中的采访环境。
 
-## 🌐 Live Demo
+记录备份不包含 API Key，也不包含 Zep 云端图谱内容。原 Zep 账号或云端图谱不可用时，仅恢复本地备份无法恢复云端访问。本机备份也无法防止整块磁盘损坏，重要备份请另存一份。详细操作见 [工作台使用说明](./STUDIO_README.md)。
 
-Welcome to visit our online demo environment and experience a prediction simulation on trending public opinion events we've prepared for you: [mirofish-live-demo](https://666ghj.github.io/mirofish-demo/)
+## 从源码构建
 
-## 📸 Screenshots
+以下步骤面向开发者。普通使用者直接下载安装包即可。
 
-<div align="center">
-<table>
-<tr>
-<td><img src="./static/image/Screenshot/运行截图1.png" alt="Screenshot 1" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图2.png" alt="Screenshot 2" width="100%"/></td>
-</tr>
-<tr>
-<td><img src="./static/image/Screenshot/运行截图3.png" alt="Screenshot 3" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图4.png" alt="Screenshot 4" width="100%"/></td>
-</tr>
-<tr>
-<td><img src="./static/image/Screenshot/运行截图5.png" alt="Screenshot 5" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图6.png" alt="Screenshot 6" width="100%"/></td>
-</tr>
-</table>
-</div>
+构建环境：Windows x64、Node.js 22、Python 3.11 x64、uv。在不含个人配置或记录的源码副本中，从仓库根目录依次执行：
 
-## 🎬 Demo Videos
+~~~powershell
+npm ci --prefix frontend
+npm ci --prefix desktop
+uv sync --project backend --frozen
+npm --prefix frontend run build
+npm run desktop:build
+~~~
 
-### 1. Wuhan University Public Opinion Simulation + MiroFish Project Introduction
+每一步成功后再继续。输出位于 dist-installers/panel 和 dist-installers/full。仅构建一版可使用 npm run desktop:build:control 或 npm run desktop:build:full；桌面开发预览使用 npm run desktop:dev。
 
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
+源码测试：
 
-Click the image to watch the complete demo video for prediction using BettaFish-generated "Wuhan University Public Opinion Report"
-</div>
+~~~powershell
+uv run --project backend --frozen python -m pytest -q
+python scripts/audit-release.py
+~~~
 
-### 2. Dream of the Red Chamber Lost Ending Simulation
+GitHub Actions 按发布标签签出源码，执行测试、扫描、构建和全量安装包启动/卸载检查，核对上传文件哈希后发布。具体入口及验收边界见 [Windows 打包说明](./packaging/WINDOWS_PACKAGING.md) 和 [桌面端开发说明](./desktop/README.md)。SHA256SUMS.txt 以对应 Release 附件为准，本地重新构建的文件哈希可能不同。
 
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1cPk3BBExq" target="_blank"><img src="./static/image/红楼梦模拟推演封面.jpg" alt="MiroFish Demo Video" width="75%"/></a>
+## 许可证与上游来源
 
-Click the image to watch MiroFish's deep prediction of the lost ending based on hundreds of thousands of words from the first 80 chapters of "Dream of the Red Chamber"
-</div>
+仓库主体按 [GNU AGPL-3.0](./LICENSE) 发布，保留上游版权与许可证声明；第三方运行时和依赖按各自许可证分发。Windows 桌面体验层及本地流程改动的说明见 [NOTICE.md](./NOTICE.md)，采用的上游源码快照见 [source_info.json](./source_info.json)。
 
-> **Financial Prediction**, **Political News Prediction** and more examples coming soon...
-
-## 🔄 Workflow
-
-1. **Graph Building**: Seed extraction & Individual/collective memory injection & GraphRAG construction
-2. **Environment Setup**: Entity relationship extraction & Persona generation & Agent configuration injection
-3. **Simulation**: Dual-platform parallel simulation & Auto-parse prediction requirements & Dynamic temporal memory updates
-4. **Report Generation**: ReportAgent with rich toolset for deep interaction with post-simulation environment
-5. **Deep Interaction**: Chat with any agent in the simulated world & Interact with ReportAgent
-
-## 🚀 Quick Start
-
-### Option 1: Source Code Deployment (Recommended)
-
-#### Prerequisites
-
-| Tool | Version | Description | Check Installation |
-|------|---------|-------------|-------------------|
-| **Node.js** | 18+ | Frontend runtime, includes npm | `node -v` |
-| **Python** | ≥3.11, ≤3.12 | Backend runtime | `python --version` |
-| **uv** | Latest | Python package manager | `uv --version` |
-
-#### 1. Configure Environment Variables
-
-```bash
-# Copy the example configuration file
-cp .env.example .env
-
-# Edit the .env file and fill in the required API keys
-```
-
-**Required Environment Variables:**
-
-```env
-# LLM API Configuration (supports any LLM API with OpenAI SDK format)
-# Recommended: Alibaba Qwen-plus model via Bailian Platform: https://bailian.console.aliyun.com/
-# High consumption, try simulations with fewer than 40 rounds first
-LLM_API_KEY=your_api_key
-LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_MODEL_NAME=qwen-plus
-
-# Zep Cloud Configuration
-# Free monthly quota is sufficient for simple usage: https://app.getzep.com/
-ZEP_API_KEY=your_zep_api_key
-```
-
-#### 2. Install Dependencies
-
-```bash
-# One-click installation of all dependencies (root + frontend + backend)
-npm run setup:all
-```
-
-Or install step by step:
-
-```bash
-# Install Node dependencies (root + frontend)
-npm run setup
-
-# Install Python dependencies (backend, auto-creates virtual environment)
-npm run setup:backend
-```
-
-#### 3. Start Services
-
-```bash
-# Start both frontend and backend (run from project root)
-npm run dev
-```
-
-**Service URLs:**
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:5001`
-
-**Start Individually:**
-
-```bash
-npm run backend   # Start backend only
-npm run frontend  # Start frontend only
-```
-
-### Option 2: Docker Deployment
-
-```bash
-# 1. Configure environment variables (same as source deployment)
-cp .env.example .env
-
-# 2. Pull image and start
-docker compose up -d
-```
-
-Reads `.env` from root directory by default, maps ports `3000 (frontend) / 5001 (backend)`
-
-> Mirror address for faster pulling is provided as comments in `docker-compose.yml`, replace if needed.
-
-## 📬 Join the Conversation
-
-<div align="center">
-<img src="./static/image/QQ群.png" alt="QQ Group" width="60%"/>
-</div>
-
-&nbsp;
-
-The MiroFish team is recruiting full-time/internship positions. If you're interested in multi-agent simulation and LLM applications, feel free to send your resume to: **mirofish@shanda.com**
-
-## 📄 Acknowledgments
-
-**MiroFish has received strategic support and incubation from Shanda Group!**
-
-MiroFish's simulation engine is powered by **[OASIS (Open Agent Social Interaction Simulations)](https://github.com/camel-ai/oasis)**, We sincerely thank the CAMEL-AI team for their open-source contributions!
-
-## 📈 Project Statistics
-
-<a href="https://github.com/666ghj/MiroFish">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="static/image/star-history-dark.svg" />
-   <source media="(prefers-color-scheme: light)" srcset="static/image/star-history-light.svg" />
-   <img alt="666ghj/MiroFish Star History Chart" src="static/image/star-history-light.svg" />
- </picture>
-</a>
+本项目不是 MiroFish 官方 Windows 发行版。请在[本仓库 Issues](https://github.com/lu0973-cb02d/mirofish-studio-windows/issues)反馈桌面版问题；提交日志或截图前请移除密钥、个人材料和推演隐私内容。

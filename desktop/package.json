@@ -10,8 +10,8 @@
     "start": "electron .",
     "dev": "electron .",
     "icons": "python scripts/generate-icons.py",
-    "build:panel": "electron-builder --config electron-builder.panel.json",
-    "build:full": "electron-builder --config electron-builder.full.json",
+    "build:panel": "electron-builder --config electron-builder.panel.json --publish never",
+    "build:full": "electron-builder --config electron-builder.full.json --publish never",
     "build:all": "npm run build:panel && npm run build:full",
     "package:control": "npm run build:panel",
     "package:full": "npm run build:full"
