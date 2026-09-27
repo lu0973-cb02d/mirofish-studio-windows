@@ -1,0 +1,127 @@
+name: Build Windows installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to update
+        required: true
+        default: v1.1.0
+      publish:
+        description: Upload installers and publish the release
+        type: boolean
+        required: true
+        default: true
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: x64
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install locked dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix frontend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv sync --project backend --frozen
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Test source and build UI
+        shell: pwsh
+        run: |
+          uv run --project backend python -m pytest -q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/audit-release.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix frontend run build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Stage private-data-free runtime
+        shell: pwsh
+        run: |
+          python scripts/stage-full-runtime.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/audit-release.py packaging/full-runtime/mirofish
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build panel and full installers
+        shell: pwsh
+        run: |
+          npm --prefix desktop run build:panel
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix desktop run build:full
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Write checksums and verify outputs
+        shell: pwsh
+        run: |
+          $version = (Get-Content 'desktop/package.json' -Raw | ConvertFrom-Json).version
+          if ($env:RELEASE_TAG -ne "v$version") { throw "Release tag and package version differ" }
+          $files = @(
+            "dist-installers/panel/MiroFish-Studio-Panel-$version-Setup.exe",
+            "dist-installers/panel/MiroFish-Studio-Panel-$version-Portable.exe",
+            "dist-installers/full/MiroFish-Studio-Full-$version-Setup.exe",
+            "dist-installers/full/MiroFish-Studio-Full-$version-Portable.exe"
+          )
+          $lines = foreach ($file in $files) {
+            if (!(Test-Path -LiteralPath $file)) { throw "Missing installer: $file" }
+            $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $([IO.Path]::GetFileName($file))"
+          }
+          [IO.File]::WriteAllText((Join-Path (Get-Location) 'SHA256SUMS.txt'), (($lines -join "`n") + "`n"), [Text.Encoding]::ASCII)
+          Get-Content SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mirofish-studio-windows-${{ github.run_id }}
+          path: |
+            dist-installers/panel/*-Setup.exe
+            dist-installers/panel/*-Portable.exe
+            dist-installers/panel/*-Setup.exe.blockmap
+            dist-installers/full/*-Setup.exe
+            dist-installers/full/*-Portable.exe
+            dist-installers/full/*-Setup.exe.blockmap
+            SHA256SUMS.txt
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload and publish release
+        if: github.event_name == 'push' || inputs.publish
+        shell: pwsh
+        run: |
+          $version = (Get-Content 'desktop/package.json' -Raw | ConvertFrom-Json).version
+          gh release upload "$env:RELEASE_TAG" --clobber `
+            "dist-installers/panel/MiroFish-Studio-Panel-$version-Setup.exe" `
+            "dist-installers/panel/MiroFish-Studio-Panel-$version-Portable.exe" `
+            "dist-installers/panel/MiroFish-Studio-Panel-$version-Setup.exe.blockmap" `
+            "dist-installers/full/MiroFish-Studio-Full-$version-Setup.exe" `
+            "dist-installers/full/MiroFish-Studio-Full-$version-Portable.exe" `
+            "dist-installers/full/MiroFish-Studio-Full-$version-Setup.exe.blockmap" `
+            SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release edit "$env:RELEASE_TAG" --draft=false --notes-file RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
