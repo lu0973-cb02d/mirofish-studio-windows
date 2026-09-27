@@ -1,0 +1,30 @@
+appId: com.mirofish.desktop
+productName: MiroFish Studio 全量版
+artifactName: MiroFish-Studio-Full-${version}-${arch}.${ext}
+directories:
+  output: dist/windows/full
+  buildResources: packaging/assets
+files:
+  - packaging/electron/**
+  - package.json
+  - '!**/*.{md,log,env,zip}'
+extraResources:
+  - from: packaging/stage/full
+    to: runtime
+    filter:
+      - '**/*'
+win:
+  icon: packaging/assets/mirofish-logo.ico
+  target:
+    - nsis
+    - portable
+  executableName: MiroFishStudio
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MiroFish Studio
+  runAfterFinish: false
+portable:
+  artifactName: MiroFish-Studio-Full-${version}-portable.${ext}

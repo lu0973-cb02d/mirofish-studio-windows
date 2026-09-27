@@ -1,0 +1,23 @@
+{
+  "name": "mirofish-studio-desktop",
+  "version": "1.1.0",
+  "description": "MiroFish Studio Windows desktop workbench",
+  "main": "main.cjs",
+  "private": true,
+  "author": "MiroFish",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "icons": "python scripts/generate-icons.py",
+    "build:panel": "electron-builder --config electron-builder.panel.json",
+    "build:full": "electron-builder --config electron-builder.full.json",
+    "build:all": "npm run build:panel && npm run build:full",
+    "package:control": "npm run build:panel",
+    "package:full": "npm run build:full"
+  },
+  "devDependencies": {
+    "electron": "40.9.3",
+    "electron-builder": "^26.0.12"
+  }
+}

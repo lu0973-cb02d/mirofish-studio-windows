@@ -1,0 +1,30 @@
+{
+  "appId": "com.mirofish.studio",
+  "productName": "MiroFish Studio",
+  "copyright": "MiroFish",
+  "directories": { "output": "../dist-installers/panel", "buildResources": "resources" },
+  "files": ["main.cjs", "preload.cjs", "setup.html", "package.json"],
+  "extraResources": [
+    { "from": "resources/mirofish-logo.ico", "to": "mirofish-logo.ico" },
+    { "from": "../frontend/dist", "to": "frontend/dist" }
+  ],
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }, { "target": "dir", "arch": ["x64"] }],
+    "icon": "resources/mirofish-logo.ico",
+    "artifactName": "MiroFish-Studio-Panel-${version}.${ext}"
+  },
+  "nsis": {
+    "artifactName": "MiroFish-Studio-Panel-${version}-Setup.${ext}",
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "MiroFish Studio",
+    "runAfterFinish": true
+  },
+  "portable": {
+    "artifactName": "MiroFish-Studio-Panel-${version}-Portable.${ext}"
+  }
+}

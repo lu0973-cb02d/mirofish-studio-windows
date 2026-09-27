@@ -1,0 +1,31 @@
+{
+  "appId": "com.mirofish.studio.full",
+  "productName": "MiroFish Studio（全量版）",
+  "copyright": "MiroFish",
+  "directories": { "output": "../dist-installers/full", "buildResources": "resources" },
+  "files": ["main.cjs", "preload.cjs", "setup.html", "package.json"],
+  "extraResources": [
+    { "from": "resources/mirofish-logo.ico", "to": "mirofish-logo.ico" },
+    { "from": "../packaging/full-runtime/mirofish", "to": "mirofish", "filter": ["**/*", "!backend/.venv/**", "!backend/uploads/**", "!studio_data/**", "!record_backups/**", "!.env", "!**/__pycache__/**", "!**/*.pyc"] },
+    { "from": "../packaging/full-runtime/runtime", "to": "mirofish/runtime", "filter": ["**/*", "!**/__pycache__/**"] }
+  ],
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }, { "target": "dir", "arch": ["x64"] }],
+    "icon": "resources/mirofish-logo.ico",
+    "artifactName": "MiroFish-Studio-Full-${version}.${ext}"
+  },
+  "nsis": {
+    "artifactName": "MiroFish-Studio-Full-${version}-Setup.${ext}",
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "MiroFish Studio（全量版）",
+    "runAfterFinish": true
+  },
+  "portable": {
+    "artifactName": "MiroFish-Studio-Full-${version}-Portable.${ext}"
+  }
+}

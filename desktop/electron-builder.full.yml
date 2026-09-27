@@ -1,0 +1,49 @@
+appId: com.mirofish.studio.full
+productName: MiroFish Studio 完整版
+copyright: Copyright © MiroFish
+directories:
+  output: release/full
+  buildResources: assets
+files:
+  - main.js
+  - preload.js
+  - package.json
+  - assets/**/*
+  - installer/full/**/*
+asar: true
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/mirofish.ico
+  artifactName: MiroFish-Studio-Full-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MiroFish Studio 完整版
+  installerLanguages: zh_CN
+  language: 2052
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+# The full installer copies the source tree beside the app and lets the
+# bootstrapper create the Python environment. It deliberately does not embed
+# a user's .venv, encrypted studio_data, or API credentials.
+extraResources:
+  - from: ../local_studio
+    to: mirofish/local_studio
+  - from: ../backend/app
+    to: mirofish/backend/app
+  - from: ../backend/requirements.txt
+    to: mirofish/backend/requirements.txt
+  - from: ../backend/run.py
+    to: mirofish/backend/run.py
+  - from: ../frontend/dist
+    to: mirofish/frontend/dist
+  - from: ../installer
+    to: mirofish/installer
+extraMetadata:
+  name: mirofish-studio-full
+  productName: MiroFish Studio 完整版

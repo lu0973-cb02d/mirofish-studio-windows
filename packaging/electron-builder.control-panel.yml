@@ -1,0 +1,30 @@
+appId: com.mirofish.desktop
+productName: MiroFish Studio 控制面板
+artifactName: MiroFish-Studio-Control-Panel-${version}-${arch}.${ext}
+directories:
+  output: dist/windows/control-panel
+  buildResources: packaging/assets
+files:
+  - packaging/electron/**
+  - package.json
+  - '!**/*.{md,log,env,zip}'
+extraResources:
+  - from: packaging/stage/control
+    to: runtime
+    filter:
+      - '**/*'
+win:
+  icon: packaging/assets/mirofish-logo.ico
+  target:
+    - nsis
+    - portable
+  executableName: MiroFishStudioControl
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MiroFish Studio 控制面板
+  runAfterFinish: false
+portable:
+  artifactName: MiroFish-Studio-Control-Panel-${version}-portable.${ext}

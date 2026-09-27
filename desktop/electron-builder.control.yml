@@ -1,0 +1,32 @@
+appId: com.mirofish.studio
+productName: MiroFish Studio
+copyright: Copyright © MiroFish
+directories:
+  output: release/control-panel
+  buildResources: assets
+files:
+  - main.js
+  - preload.js
+  - package.json
+  - assets/**/*
+asar: true
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/mirofish.ico
+  artifactName: MiroFish-Studio-Control-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MiroFish Studio
+  installerLanguages: zh_CN
+  language: 2052
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+extraMetadata:
+  name: mirofish-studio-control
+  productName: MiroFish Studio

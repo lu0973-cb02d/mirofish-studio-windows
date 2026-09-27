@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MiroFish Studio · 选择工作目录</title>
+  <style>
+    :root{color-scheme:light;--forest:#152824;--mint:#147d64;--ink:#20352e;--muted:#6d7d76;--paper:#f6f7f5}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "Segoe UI","Microsoft YaHei",sans-serif}
+    main{width:min(760px,calc(100% - 48px));margin:11vh auto;background:#fff;border:1px solid #dfe7e0;border-radius:22px;padding:42px 48px;box-shadow:0 18px 55px #123d2b12}
+    .logo{width:62px;height:62px;border-radius:18px;background:var(--forest);display:grid;place-items:center;color:#f2f7f5;font-size:34px;margin-bottom:22px}.logo small{color:#14aa89;font-size:17px;line-height:0;align-self:end;margin:0 8px 10px 0}
+    h1{font-size:30px;letter-spacing:-.7px;margin:0 0 10px}p{color:var(--muted);margin:8px 0 20px}.hint{background:#f1f7f2;border-radius:12px;padding:14px 16px;font-size:13px}.path{font-family:Consolas,monospace;color:#2a6253;word-break:break-all}.actions{display:flex;gap:12px;margin-top:25px;flex-wrap:wrap}button{border:0;border-radius:10px;padding:12px 18px;font:600 14px inherit;cursor:pointer}button.primary{background:var(--mint);color:#fff}button.secondary{background:#eef4ef;color:#286450}button:disabled{opacity:.55;cursor:wait}#status{min-height:26px;margin-top:17px;color:#a54d38;font-size:13px}
+  </style>
+</head>
+<body><main>
+  <div class="logo">✦<small>✦</small></div>
+  <h1>连接你的 MiroFish 工作区</h1>
+  <p>控制面板需要找到 MiroFish 的本地工作目录。选择包含 <b>backend</b>、<b>local_studio</b> 和 <b>frontend</b> 的文件夹；已有模型、Zep 连接与推演记录会继续保留。</p>
+  <div class="hint">当前目录：<span id="path" class="path">正在检查…</span></div>
+  <div class="actions"><button class="secondary" id="choose">选择工作目录</button><button class="primary" id="continue" disabled>连接并打开工作台</button></div>
+  <div id="status" role="status"></div>
+</main><script>
+  const path=document.querySelector('#path'),status=document.querySelector('#status'),go=document.querySelector('#continue');
+  let root='';
+  const render=async()=>{const s=await window.mirofishDesktop.getStatus();root=s.root||'';path.textContent=root||'还没有选择';go.disabled=!s.ready};
+  document.querySelector('#choose').onclick=async()=>{status.textContent='';const r=await window.mirofishDesktop.chooseRoot();if(r?.root){root=r.root;path.textContent=root;go.disabled=false}else if(r?.error)status.textContent=r.error};
+  go.onclick=async()=>{go.disabled=true;status.textContent='正在连接本地引擎…';const r=await window.mirofishDesktop.setRoot(root);if(r?.ok)status.textContent='正在打开工作台…';else{status.textContent=r?.error||'目录无法使用，请重新选择。';go.disabled=false}};
+  render();
+</script></body></html>
