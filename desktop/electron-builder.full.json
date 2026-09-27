@@ -1,6 +1,7 @@
 {
   "appId": "com.mirofish.studio.full",
   "productName": "MiroFish Studio（全量版）",
+  "publish": null,
   "copyright": "MiroFish",
   "directories": { "output": "../dist-installers/full", "buildResources": "resources" },
   "files": ["main.cjs", "preload.cjs", "setup.html", "package.json", "resources/mirofish-logo.png"],

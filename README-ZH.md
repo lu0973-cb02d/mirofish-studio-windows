@@ -6,7 +6,7 @@
 
 [下载安装](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) · [使用说明](./STUDIO_README.md) · [版本说明](./RELEASE_NOTES.md) · [来源与许可证](./NOTICE.md)
 
-![MiroFish Studio Windows 桌面工作台](./static/image/studio-desktop.png)
+![MiroFish Studio Windows 桌面工作台](./static/image/studio-desktop.jpg)
 
 ## 选择安装包
 

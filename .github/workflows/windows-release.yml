@@ -29,7 +29,6 @@ jobs:
     timeout-minutes: 120
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -127,6 +126,8 @@ jobs:
 
       - name: Upload and publish release
         if: github.event_name == 'push' || inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
           $version = (Get-Content 'desktop/package.json' -Raw | ConvertFrom-Json).version

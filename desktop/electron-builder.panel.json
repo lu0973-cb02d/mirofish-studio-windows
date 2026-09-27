@@ -1,6 +1,7 @@
 {
   "appId": "com.mirofish.studio",
   "productName": "MiroFish Studio",
+  "publish": null,
   "copyright": "MiroFish",
   "directories": { "output": "../dist-installers/panel", "buildResources": "resources" },
   "files": ["main.cjs", "preload.cjs", "setup.html", "package.json", "resources/mirofish-logo.png"],
