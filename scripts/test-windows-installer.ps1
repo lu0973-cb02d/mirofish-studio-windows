@@ -33,6 +33,7 @@ try {
   Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($installRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 }
 $dataRoot = Join-Path $env:APPDATA 'mirofish-studio-desktop/data'
+if (!(Test-Path -LiteralPath (Join-Path $dataRoot 'studio_data/desktop.log'))) { throw 'Actual desktop log is missing from the expected user data directory' }
 $sentinel = Join-Path $dataRoot 'qa-preserve.txt'
 New-Item -ItemType Directory -Force -Path $dataRoot | Out-Null
 Set-Content -LiteralPath $sentinel -Value 'Preserve user data during uninstall' -Encoding utf8
