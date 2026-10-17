@@ -8,6 +8,7 @@
 defineProps({ name: { type: String, default: 'spark' } })
 const paths = {
   spark: ['M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z'],
+  download: ['M12 3v12m-5-5l5 5 5-5M4 21h16'],
   grid: ['M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'],
   cpu: ['M7 7h10v10H7zM9 3v4m6-4v4M9 17v4m6-4v4M3 9h4m-4 6h4m10-6h4m-4 6h4M10 10h4v4h-4z'],
   link: ['M10 13a5 5 0 007 .2l3-3a5 5 0 00-7-7l-1.7 1.7', 'M14 11a5 5 0 00-7-.2l-3 3a5 5 0 007 7l1.7-1.7'],

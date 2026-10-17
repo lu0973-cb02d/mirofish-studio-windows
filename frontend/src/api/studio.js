@@ -1,7 +1,7 @@
 const API_ROOT = '/studio-api'
 
 /** The local service owns credentials. Never persist keys in browser storage. */
-async function request(path, { method = 'GET', body, signal, timeout = 30000 } = {}) {
+async function request(path, { method = 'GET', body, form, signal, timeout = 30000 } = {}) {
   const controller = new AbortController()
   const abort = () => controller.abort()
   if (signal?.aborted) abort()
@@ -20,9 +20,10 @@ async function request(path, { method = 'GET', body, signal, timeout = 30000 } =
       headers: {
         'Accept': 'application/json',
         'X-MiroFish-Studio': '1',
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json' })
+        ...(body === undefined || form ? {} : { 'Content-Type': 'application/json' })
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      // A multipart body must keep the boundary the browser generates.
+      body: form || (body === undefined ? undefined : JSON.stringify(body)),
       signal: controller.signal
     })
     let envelope
@@ -72,5 +73,15 @@ export const studioApi = {
   engine: (action, signal) => post(`/engine/${action}`, {}, signal, 90000),
   quit: signal => post('/quit', {}, signal, 90000),
   createBackup: signal => post('/backups/create', {}, signal, 300000),
-  restoreBackup: (name, signal) => post('/backups/restore', { name }, signal, 300000)
+  restoreBackup: (name, signal) => post('/backups/restore', { name }, signal, 300000),
+  core: signal => get('/core', signal),
+  checkCore: signal => post('/core/check', {}, signal, 60000),
+  installCore: (version, signal) => post('/core/install', { version }, signal, 300000),
+  activateCore: (version, signal) => post('/core/activate', { version }, signal, 300000),
+  rollbackCore: signal => post('/core/rollback', {}, signal, 300000),
+  importCore: (file, signal) => {
+    const form = new FormData()
+    form.append('bundle', file)
+    return request('/core/import', { method: 'POST', form, signal, timeout: 300000 })
+  }
 }

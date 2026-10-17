@@ -116,6 +116,43 @@
           <section class="surface backups-panel"><div class="section-title"><div><h2>记录备份 <span class="count-label">{{ backups.length }}</span></h2><p class="section-subtitle">备份包含推演记录，不包含 API Key。</p></div><button class="text-button" :disabled="backupsLoading" @click="loadBackups"><Icon name="refresh" :class="{ spinning: backupsLoading }" />刷新</button></div><div v-if="backupsLoading && !backups.length" class="empty-state compact"><Icon class="spinning" name="loader" /><p>正在读取备份…</p></div><div v-else-if="backupsError" class="empty-state compact"><Icon name="info" /><p>{{ backupsError }}</p><button class="text-button" @click="loadBackups">重试</button></div><div v-else-if="!backups.length" class="empty-state compact"><span class="empty-icon"><Icon name="archive" /></span><h3>还没有记录备份</h3><p>点击「立即备份记录」，在本机保存当前记录。</p></div><div v-else class="backup-list"><div v-for="backup in backups" :key="backup.name" class="backup-row"><span class="backup-file-icon"><Icon name="archive" /></span><div class="backup-details"><strong :title="backup.name">{{ backup.name }}</strong><small>{{ formatDate(backup.created_at) }} <span>·</span> {{ formatSize(backup.size) }}<template v-if="backup.file_count != null"> <span>·</span> {{ backup.file_count }} 个文件</template></small></div><button class="button button-small button-outline" :disabled="!!action || !connected || status.engine?.state !== 'stopped'" :title="status.engine?.state !== 'stopped' ? '停止引擎后可以恢复记录' : '恢复此备份'" @click="restoreBackup(backup)"><Icon :name="action === `restore-${backup.name}` ? 'loader' : 'refresh'" :class="{ spinning: action === `restore-${backup.name}` }" />{{ action === `restore-${backup.name}` ? '恢复中…' : '恢复' }}</button></div></div><div class="backup-guidance"><Icon name="info" /><div><p>恢复需要先停止推演引擎；恢复前会为当前数据创建回退备份。</p><p>有记录变化时每 15 分钟自动备份，保留最近 20 份自动备份。页面断线可继续查看；程序中断不会自动从中间轮次续跑。</p><p v-if="status.paths?.backups" class="path-note">备份位置 <code>{{ status.paths.backups }}</code></p></div></div></section>
         </template>
 
+        <template v-else-if="tab === 'core'">
+          <section class="page-heading"><div><h1>核心版本</h1><p class="page-description">推演核心可以单独更新，无需重新安装。更新包经过签名校验，启用失败会自动回到原来的版本。</p></div><button class="button button-primary" :disabled="!!action || !connected || !core.enabled" @click="checkCoreUpdate"><Icon :name="action === 'core-check' ? 'loader' : 'refresh'" :class="{ spinning: action === 'core-check' }" />{{ action === 'core-check' ? '正在检查…' : '检查更新' }}</button></section>
+          <section class="surface core-panel" aria-labelledby="core-current-title">
+            <div class="section-title"><h2 id="core-current-title">正在使用的核心</h2><span class="badge" :class="core.running?.source === 'downloaded' ? 'badge-green' : 'badge-neutral'">{{ core.running?.source === 'downloaded' ? '已更新' : '随安装包提供' }}</span></div>
+            <div v-if="coreLoading && !core.loaded" class="empty-state compact"><Icon class="spinning" name="loader" /><p>正在读取核心信息…</p></div>
+            <div v-else-if="coreError" class="empty-state compact"><Icon name="info" /><p>{{ coreError }}</p><button class="text-button" @click="loadCore">重试</button></div>
+            <template v-else>
+              <dl class="core-facts">
+                <div><dt>核心版本</dt><dd>{{ core.running?.version || '—' }}</dd></div>
+                <div><dt>来自上游提交</dt><dd>{{ coreShort(core.running?.upstream_commit) || '—' }}</dd></div>
+                <div><dt>安装包自带</dt><dd>{{ core.bundled?.version || '—' }}</dd></div>
+                <div><dt>引擎正在运行</dt><dd>{{ core.engine_core_version || (status.engine?.healthy ? '—' : '未运行') }}</dd></div>
+              </dl>
+              <div v-if="core.notice" class="inline-info"><Icon name="info" /><span>{{ core.notice }}</span></div>
+              <div v-if="core.engine_core_version && core.engine_core_version !== core.running?.version" class="inline-info"><Icon name="info" /><span>引擎仍在运行旧版本，重启引擎后会使用 {{ core.running?.version }}。</span></div>
+            </template>
+          </section>
+          <section class="surface core-panel" aria-labelledby="core-update-title">
+            <div class="section-title"><h2 id="core-update-title">更新</h2></div>
+            <div v-if="!core.enabled" class="empty-state compact"><span class="empty-icon"><Icon name="shield" /></span><h3>此版本尚未启用核心更新</h3><p>为避免运行来源不明的代码，只有内置了发布者签名公钥的版本才能安装核心更新。</p></div>
+            <div v-else-if="coreUpdate" class="core-offer">
+              <div><strong>可更新到 {{ coreUpdate.latest }}</strong><span class="quiet-label">当前 {{ coreUpdate.current }}</span></div>
+              <pre v-if="coreUpdate.release?.notes" class="core-notes">{{ coreUpdate.release.notes }}</pre>
+              <p class="section-subtitle">{{ coreRestartNote }}</p>
+              <button class="button button-primary" :disabled="!!action || !connected || status.busy || coreUpdate.can_install === false" @click="installCoreUpdate"><Icon :name="action === 'core-install' ? 'loader' : 'download'" :class="{ spinning: action === 'core-install' }" />{{ action === 'core-install' ? '正在安装…' : `下载并启用 ${coreUpdate.latest}` }}</button>
+            </div>
+            <div v-else-if="core.last_check" class="inline-info"><Icon name="check" /><span>已是最新：{{ core.last_check.current }}。</span></div>
+            <p v-else class="section-subtitle">点击右上角「检查更新」，从官方发布页查找新的核心。</p>
+          </section>
+          <section v-if="core.enabled" class="surface core-panel" aria-labelledby="core-manage-title">
+            <div class="section-title"><div><h2 id="core-manage-title">离线导入与回退</h2><p class="section-subtitle">无法访问发布页时，可导入从官方渠道获得的更新包（mirofish-core-*.zip）。</p></div>
+              <div class="core-actions"><input ref="coreFileInput" type="file" accept=".zip" hidden @change="importCoreFile" /><button class="button button-outline" :disabled="!!action || !connected" @click="coreFileInput?.click()"><Icon name="archive" />导入更新包</button><button class="button button-outline" :disabled="!!action || !connected || status.busy || !core.can_rollback" @click="rollbackCore"><Icon name="refresh" />回退到上一个版本</button></div></div>
+            <ul v-if="core.installed.length" class="core-installed"><li v-for="version in [...core.installed].reverse()" :key="version"><span><strong>{{ version }}</strong> <span v-if="version === core.active" class="badge badge-green">正在使用</span></span><button v-if="version !== core.active" class="text-button" :disabled="!!action || !connected || status.busy" @click="activateInstalled(version)">启用</button></li></ul>
+            <p v-else class="section-subtitle">还没有安装过核心更新。</p>
+          </section>
+        </template>
+
         </div>
         </Transition>
 
@@ -137,7 +174,8 @@ const navigation = [
   { id: 'dashboard', name: '工作台', icon: 'grid' },
   { id: 'models', name: '模型预设', icon: 'cpu' },
   { id: 'zep', name: 'Zep 连接', icon: 'link' },
-  { id: 'records', name: '记录与备份', icon: 'archive' }
+  { id: 'records', name: '记录与备份', icon: 'archive' },
+  { id: 'core', name: '核心版本', icon: 'download' }
 ]
 const validTab = value => navigation.some(item => item.id === value) ? value : 'dashboard'
 const tab = ref(validTab(route.query.tab))
@@ -162,6 +200,10 @@ const logsError = ref('')
 const notice = ref(null)
 const action = ref('')
 const recordQuery = ref('')
+const core = reactive({ loaded: false, enabled: false, running: {}, bundled: {}, active: null, installed: [], can_rollback: false, engine_core_version: '', notice: '', last_check: null })
+const coreError = ref('')
+const coreLoading = ref(false)
+const coreFileInput = ref(null)
 const modelNameInput = ref(null)
 const zepNameInput = ref(null)
 const modelForm = reactive({ id: '', name: '', base_url: '', model: '', key: '' })
@@ -222,6 +264,7 @@ watch(() => route.query.tab, value => { tab.value = validTab(value) })
 watch(tab, value => {
   notice.value = null
   if (value === 'records') { loadRecords(); loadBackups() }
+  if (value === 'core') loadCore()
 })
 watch(() => [modelForm.id, modelForm.base_url, modelForm.key], () => { discoveredModels.value = []; modelFeedback.value = null })
 watch(() => modelForm.model, () => { modelFeedback.value = null })
@@ -275,7 +318,7 @@ function onLogsToggle(event) { if (event.target.open) loadLogs() }
 async function refreshAll() {
   if (refreshing.value) return
   refreshing.value = true
-  try { await Promise.allSettled([refreshCore(), loadRecords(), loadBackups()]) }
+  try { await Promise.allSettled([refreshCore(), loadRecords(), loadBackups(), loadCore()]) }
   finally { refreshing.value = false; initialLoading.value = false }
 }
 
@@ -476,6 +519,68 @@ async function deleteZep(connection) {
 async function toggleRotation() {
   const next = !config.auto_zep
   await runAction('rotation', async () => { const data = await studioApi.saveSettings({ auto_zep: next }, lifetime.signal); await refreshCore(); return data }, next ? '已开启同组 Zep 密钥自动切换。' : '已关闭 Zep 密钥自动切换。')
+}
+
+async function loadCore() {
+  if (coreLoading.value || disposed) return
+  coreLoading.value = true
+  try { Object.assign(core, await studioApi.core(lifetime.signal), { loaded: true }); coreError.value = '' }
+  catch (error) { if (error.name !== 'AbortError') coreError.value = error.message }
+  finally { coreLoading.value = false }
+}
+
+const coreUpdate = computed(() => (core.last_check?.available ? core.last_check : null))
+const coreShort = value => (value || '').slice(0, 7)
+const coreRestartNote = computed(() => status.engine?.healthy ? '引擎正在运行：切换时会先备份记录并自动重启引擎，进行中的任务结束后才能操作。' : '引擎当前未运行，下次启动时使用新的核心。')
+
+async function checkCoreUpdate() {
+  await runAction('core-check', async () => {
+    const data = await studioApi.checkCore(lifetime.signal)
+    core.last_check = data
+    return { message: data.available ? `发现新的核心 ${data.latest}。` : '已是最新的核心版本。' }
+  }, '检查完成。')
+}
+
+async function installCoreUpdate() {
+  const update = coreUpdate.value
+  if (!update) return
+  if (!window.confirm(`安装核心 ${update.latest} 并启用？\n${coreRestartNote.value}\n更新包已通过签名校验才会启用；启动失败会自动回到原来的版本。`)) return
+  await runAction('core-install', async () => {
+    await studioApi.installCore(update.latest, lifetime.signal)
+    const data = await studioApi.activateCore(update.latest, lifetime.signal)
+    core.last_check = null
+    await Promise.allSettled([loadCore(), refreshCore()])
+    return { message: data?.restarted ? `已切换到核心 ${update.latest}，引擎已重启。` : `已切换到核心 ${update.latest}，下次启动引擎时生效。` }
+  }, '核心已更新。')
+}
+
+async function rollbackCore() {
+  if (!window.confirm(`回退到上一个核心版本？\n${coreRestartNote.value}`)) return
+  await runAction('core-rollback', async () => {
+    const data = await studioApi.rollbackCore(lifetime.signal)
+    await Promise.allSettled([loadCore(), refreshCore()])
+    return { message: `已回退到核心 ${data?.running?.version || ''}。` }
+  }, '已回退。')
+}
+
+async function importCoreFile(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  await runAction('core-import', async () => {
+    const data = await studioApi.importCore(file, lifetime.signal)
+    await loadCore()
+    return { message: `更新包已通过校验并安装（核心 ${data.installed}）。点击「启用」后生效。`, installed: data.installed }
+  }, '更新包已安装。')
+}
+
+async function activateInstalled(version) {
+  if (!window.confirm(`启用核心 ${version}？\n${coreRestartNote.value}`)) return
+  await runAction(`core-activate-${version}`, async () => {
+    const data = await studioApi.activateCore(version, lifetime.signal)
+    await Promise.allSettled([loadCore(), refreshCore()])
+    return { message: data?.restarted ? `已切换到核心 ${version}，引擎已重启。` : `已切换到核心 ${version}，下次启动引擎时生效。` }
+  }, '核心已启用。')
 }
 
 async function createBackup() {
@@ -806,7 +911,17 @@ onBeforeUnmount(() => { disposed = true; lifetime.abort(); window.clearTimeout(p
 .checkbox-label small { display:block; margin-top:3px; color:var(--muted); font-size:12px; }
 
 /* Records and backup lists. */
-.records-panel, .backups-panel { margin-bottom:20px; padding:22px 24px; }
+.records-panel, .backups-panel, .core-panel { margin-bottom:20px; padding:22px 24px; }
+.core-facts { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:14px 24px; margin:6px 0 0; }
+.core-facts div { min-width:0; }
+.core-facts dt { color:var(--muted); font-size:12px; }
+.core-facts dd { margin:3px 0 0; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.core-offer { display:grid; gap:10px; }
+.core-offer > div:first-child { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.core-notes { margin:0; padding:10px 12px; max-height:180px; overflow:auto; white-space:pre-wrap; background:#f7f9fc; border:1px solid var(--line); border-radius:8px; font:12px/1.7 inherit; color:#40516a; }
+.core-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.core-installed { list-style:none; margin:14px 0 0; padding:0; display:grid; gap:2px; }
+.core-installed li { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; padding:6px 4px; border-bottom:1px solid #edf1f6; }
 .records-panel > .section-title { margin-bottom:18px; }
 .search-field { display:flex; align-items:center; gap:8px; min-height:38px; padding:6px 11px; border:1px solid #cdd8e4; border-radius:8px; background:#fbfcfe; color:#71869d; transition:border-color var(--motion),box-shadow var(--motion); }
 .search-field:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px #0d8a7015; }
