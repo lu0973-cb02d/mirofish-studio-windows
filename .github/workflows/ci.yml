@@ -1,0 +1,124 @@
+name: CI
+
+# Fast feedback on every push and pull request. The release workflow still
+# repeats the checks that matter for shipping (tests, secret scan, installers);
+# this one exists so regressions are visible before a tag is cut.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is where the product ships (DPAPI, process supervision);
+        # Linux is quicker and catches platform-neutral regressions early.
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install locked dependencies
+        run: uv sync --project backend --frozen
+
+      - name: Run tests
+        run: uv run --project backend --frozen python -m pytest -q
+
+      - name: Scan source for credentials and local data
+        run: python scripts/audit-release.py
+
+  frontend:
+    name: Frontend build and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install locked dependencies
+        run: npm ci --prefix frontend
+
+      - name: Run tests
+        run: npm --prefix frontend test
+
+      - name: Build
+        run: npm --prefix frontend run build
+
+  desktop:
+    name: Desktop shell checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Electron cannot be launched on a headless runner, but a syntax error in
+      # the shell or a malformed builder config would only otherwise surface
+      # during the 45 minute installer build.
+      - name: Check shell sources and builder configs
+        run: |
+          node --check desktop/main.cjs
+          node --check desktop/preload.cjs
+          for config in desktop/electron-builder.*.json; do
+            node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$config"
+          done
+
+  dependency-audit:
+    name: Dependency audit (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Reported, not enforced: transitive Python packages are pinned by the
+    # OASIS/camel releases and cannot always be raised independently. Remove
+    # continue-on-error once the findings are cleared.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: npm audit (frontend, production dependencies)
+        run: npm audit --prefix frontend --omit=dev --audit-level=high
+
+      - name: npm audit (desktop, production dependencies)
+        run: npm audit --prefix desktop --omit=dev --audit-level=high
+
+      - name: pip-audit (backend lock file)
+        run: |
+          uv export --project backend --frozen --no-hashes --no-emit-project > requirements-audit.txt
+          uvx pip-audit -r requirements-audit.txt --no-deps --disable-pip
