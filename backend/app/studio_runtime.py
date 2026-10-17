@@ -28,6 +28,7 @@ def health_snapshot():
                 'pending_tasks': len(active_tasks), 'active_simulations': len(active_runs),
                 'interview_ids': interview_ids, 'interview_count': len(interview_ids),
                 'runtime_model_id': os.environ.get('MIROFISH_MODEL_ID', ''),
+                'core_version': os.environ.get('MIROFISH_CORE_VERSION', ''),
                 'runtime_revision': os.environ.get('MIROFISH_CONFIG_REVISION', '')}
 
 

@@ -221,7 +221,7 @@ def _sqlite_snapshot(source: Path, destination: Path) -> None:
 
 def create_backup(kind: str = "manual", *, root: str | Path | None = None) -> Path:
     """Create and verify a complete snapshot; never replace an existing archive."""
-    if kind not in {"manual", "auto", "pre-restore"}:
+    if kind not in {"manual", "auto", "pre-restore", "pre-update"}:
         raise ValueError("无效备份类型")
     with backup_guard(root=root):
         return _create_backup(kind, root=root)

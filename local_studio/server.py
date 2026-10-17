@@ -18,6 +18,7 @@ from werkzeug.serving import make_server
 
 from .config_store import ConfigStore
 from . import connectivity
+from .core_update import CoreStore, CoreUpdateError
 from .engine import ConfigApplyUncertain, EngineError, EngineManager
 
 VERSION = "1.1.0"
@@ -76,17 +77,19 @@ def record_inventory(root):
     return {"projects": projects, "simulations": simulations, "reports": reports}
 
 
-def create_app(root=None, store=None, engine=None, port=3888):
+def create_app(root=None, store=None, engine=None, port=3888, core=None, core_source=None):
     root = Path(root or Path(__file__).resolve().parents[1]).resolve()
     data_root = Path(os.environ.get("MIROFISH_DATA_ROOT", root)).resolve()
     store = store or ConfigStore(data_root)
-    engine = engine or EngineManager(root, store, data_root=data_root)
+    core = core or CoreStore(data_root, root)
+    engine = engine or EngineManager(root, store, data_root=data_root, core=core)
     started = time.time()
     app = Flask(__name__, static_folder=None)
     app.json.ensure_ascii = False
     app.config["MAX_CONTENT_LENGTH"] = 55 * 1024 * 1024
     app.config["STUDIO_STORE"] = store
     app.config["STUDIO_ENGINE"] = engine
+    app.config["STUDIO_CORE"] = core
     from .autobackup import AutoBackup
     app.config["STUDIO_AUTOBACKUP"] = AutoBackup(data_root)
     app.config["STUDIO_DATA_ROOT"] = data_root
@@ -113,8 +116,9 @@ def create_app(root=None, store=None, engine=None, port=3888):
         if request.path.startswith("/studio-api/"):
             if request.headers.get("X-MiroFish-Studio") != "1":
                 return jsonify(success=False, error="请从工作台操作。"), 403
-            if request.content_length and request.content_length > 1024 * 1024:
-                return jsonify(success=False, error="配置请求过大。"), 413
+            limit = 160 * 1024 * 1024 if request.path == "/studio-api/core/import" else 1024 * 1024
+            if request.content_length and request.content_length > limit:
+                return jsonify(success=False, error="请求内容过大。"), 413
         if request.method not in {"GET", "HEAD", "OPTIONS"} and request.path.startswith("/api/"):
             if request.headers.get("X-MiroFish-Studio") != "1":
                 return jsonify(success=False, error="请从工作台操作。"), 403
@@ -144,6 +148,9 @@ def create_app(root=None, store=None, engine=None, port=3888):
         # to the browser or a plaintext diagnostic log.
         logging.getLogger("studio").error("Operation failed: %s", type(error).__name__)
         return jsonify(success=False, error="操作未完成，请检查配置或稍后重试。"), 500
+
+    from .core_routes import create_blueprint as create_core_blueprint
+    app.register_blueprint(create_core_blueprint(core, engine, data_root, source=core_source))
 
     @app.get("/studio-health")
     def health():
@@ -408,7 +415,9 @@ def create_app(root=None, store=None, engine=None, port=3888):
         # A control-panel installer can carry the UI separately while using
         # an existing MiroFish source directory for records and the engine.
         # Keep the source-tree path as the default for development/full builds.
-        dist = Path(os.environ.get("MIROFISH_STUDIO_FRONTEND_ROOT", root / "frontend/dist")).resolve()
+        # A verified core update brings the UI that matches its backend.
+        core_dist = core.selection().frontend_root
+        dist = (core_dist or Path(os.environ.get("MIROFISH_STUDIO_FRONTEND_ROOT", root / "frontend/dist"))).resolve()
         candidate = (dist / path).resolve()
         if candidate.is_relative_to(dist.resolve()) and candidate.is_file():
             return send_from_directory(dist, path)

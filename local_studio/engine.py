@@ -24,14 +24,19 @@ class ConfigApplyUncertain(EngineError):
 
 
 class EngineManager:
-    def __init__(self, root: Path, store, port=5001, data_root: Path | str | None = None):
+    def __init__(self, root: Path, store, port=5001, data_root: Path | str | None = None, core=None):
         self.root = Path(root).resolve()
+        # Optional CoreStore: which copy of backend/ to run (see core_update).
+        self.core = core
+        self.script: str | None = None
+        self.core_version = ""
+        self.core_notice = ""
         self.data_root = Path(data_root or self.root).resolve()
         self.store = store
         self.port = port
         self.url = f"http://127.0.0.1:{port}"
         self.state_dir = self.data_root / "studio_data"
-        self.state_dir.mkdir(exist_ok=True)
+        self.state_dir.mkdir(parents=True, exist_ok=True)
         self.manifest = self.state_dir / "engine.json"
         self.lock = threading.RLock()
         self.process = None
@@ -59,6 +64,8 @@ class EngineManager:
             data = json.loads(self.manifest.read_text(encoding="utf-8"))
             self.pid, self.created = data["pid"], data["created"]
             self.token, self.instance = data["token"], data["instance"]
+            self.script = data.get("script") if isinstance(data.get("script"), str) else None
+            self.core_version = data.get("core_version") if isinstance(data.get("core_version"), str) else ""
             if not self._owned_process():
                 self.pid = None
                 self.token = self.instance = ""
@@ -74,7 +81,9 @@ class EngineManager:
                 return None
             command = p.cmdline()
             expected_python = self._python_path()
-            expected_script = self.root / "backend/run.py"
+            # The core can change between runs, so ownership is judged against
+            # the script this process was actually started with.
+            expected_script = Path(self.script).resolve() if self.script else self.root / "backend/run.py"
             if not command or Path(command[0]).resolve() != expected_python:
                 return None
             if not any(Path(arg).is_absolute() and Path(arg).resolve() == expected_script for arg in command[1:]):
@@ -132,6 +141,7 @@ class EngineManager:
                     "busy": health.get("busy", False), "configuration_synced": synced,
                     "runtime_revision": runtime_revision, "selected_revision": selected_revision,
                     "runtime_model_id": health.get("runtime_model_id"),
+                    "core_version": health.get("core_version") or self.core_version,
                     "interview_count": health.get("interview_count", 0)}
         return {"state": "starting" if owned else "stopped", "healthy": False,
                 "owned": owned, "pid": self.pid if owned else None, "message": self.message,
@@ -188,9 +198,16 @@ class EngineManager:
                 raise EngineError(f"{self.port} 端口被占用，未停止或覆盖其他程序。")
             self.token, self.instance = secrets.token_urlsafe(32), secrets.token_hex(16)
             env = os.environ.copy()
+            selection = self.core.resolve() if self.core is not None else None
+            code_root = selection.code_root if selection is not None else self.root
+            self.core_notice = selection.notice if selection is not None else ""
+            script = code_root / "backend/run.py"
+            if not script.is_file():
+                raise EngineError("核心文件不完整，请重新安装或回退核心版本。")
             env.update({"MIROFISH_STUDIO_ROOT": str(self.data_root),
                         "MIROFISH_DATA_ROOT": str(self.data_root),
-                        "MIROFISH_CODE_ROOT": str(self.root),
+                        "MIROFISH_CODE_ROOT": str(code_root),
+                        "MIROFISH_CORE_VERSION": selection.version if selection is not None else "",
                         "MIROFISH_ENGINE_TOKEN": self.token,
                         "MIROFISH_ENGINE_INSTANCE": self.instance,
                         "MIROFISH_MODEL_ID": model["id"],
@@ -209,14 +226,17 @@ class EngineManager:
             if not python.exists():
                 raise EngineError("缺少本地 Python 环境，请修复安装。")
             self.log_handle = (self.state_dir / "engine.log").open("a", encoding="utf-8")
-            self.process = subprocess.Popen([str(python), str(self.root / "backend/run.py")],
-                cwd=self.root / "backend", env=env, stdout=self.log_handle,
+            self.process = subprocess.Popen([str(python), str(script)],
+                cwd=code_root / "backend", env=env, stdout=self.log_handle,
                 stderr=subprocess.STDOUT, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
             self.pid = self.process.pid
             self.created = psutil.Process(self.pid).create_time()
             temp = self.manifest.with_suffix(".tmp")
+            self.script = str(script.resolve())
+            self.core_version = selection.version if selection is not None else ""
             temp.write_text(json.dumps({"pid": self.pid, "created": self.created,
-                "token": self.token, "instance": self.instance}), encoding="utf-8")
+                "token": self.token, "instance": self.instance, "script": self.script,
+                "core_version": self.core_version}), encoding="utf-8")
             os.replace(temp, self.manifest)
             self.message = "引擎正在启动，请稍候"
             for _ in range(32):
@@ -266,9 +286,12 @@ class EngineManager:
                 raise EngineError("当前配置未能应用，任务可能仍在执行。请稍后重试。")
             raise ConfigApplyUncertain("配置请求的结果暂时无法确认。已保留所选配置并暂停新任务，请重新应用配置或重启引擎。")
 
-    def stop(self):
+    def stop(self, force=False):
+        """Stop the owned engine. ``force`` skips the idle check; only for an
+        engine that is known not to be serving work (e.g. a failed core switch)."""
         with self.lock:
-            self.ensure_idle()
+            if not force:
+                self.ensure_idle()
             p = self._owned_process()
             if p is None:
                 return self.status()

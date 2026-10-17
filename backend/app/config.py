@@ -16,7 +16,10 @@ if os.path.exists(project_root_env):
     load_dotenv(project_root_env, override=not bool(os.environ.get('MIROFISH_STUDIO_ROOT')))
 else:
     # 如果根目录没有 .env，尝试加载环境变量（用于生产环境）
-    load_dotenv(override=True)
+    # load_dotenv() searches parent directories, which for a downloaded core
+    # lie inside the user's profile: never let a stray .env there replace the
+    # model and Zep selection that Studio supplies.
+    load_dotenv(override=not bool(os.environ.get('MIROFISH_STUDIO_ROOT')))
 
 
 class Config:
