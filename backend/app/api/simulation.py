@@ -20,6 +20,7 @@ from ..services.simulation_runner import (
     SimulationStopPending,
 )
 from ..services.zep_graph_memory_updater import ZepGraphMemoryManager
+from ..utils.atomic_io import write_json_atomic
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
 from ..utils.zep_lifecycle import get_graph_readers, graph_lifecycle_lock
@@ -362,8 +363,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
                     state_data["status"] = "ready"
                     from datetime import datetime
                     state_data["updated_at"] = datetime.now().isoformat()
-                    with open(state_file, 'w', encoding='utf-8') as f:
-                        json.dump(state_data, f, ensure_ascii=False, indent=2)
+                    write_json_atomic(state_file, state_data)
                     logger.info(f"自动更新模拟状态: {simulation_id} preparing -> ready")
                     status = "ready"
                 except Exception as e:
@@ -764,7 +764,15 @@ def get_prepare_status():
         
         # 如果提供了simulation_id，先检查是否已准备完成
         if simulation_id:
-            is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
+            # A forced regeneration keeps the previous files and flags until it
+            # finishes, so those artifacts cannot prove the simulation is ready
+            # while a preparation task is still running.
+            active_task = next(
+                (item for item in TaskManager().list_tasks(task_type="simulation_prepare")
+                 if item.get("metadata", {}).get("simulation_id") == simulation_id
+                 and item.get("status") in {"pending", "processing"}),
+                None)
+            is_prepared, prepare_info = (False, {}) if active_task else _check_simulation_prepared(simulation_id)
             if is_prepared:
                 return jsonify({
                     "success": True,
@@ -777,6 +785,8 @@ def get_prepare_status():
                         "prepare_info": prepare_info
                     }
                 })
+            if active_task and not task_id:
+                return jsonify({"success": True, "data": {**active_task, "already_prepared": False}})
         
         # A reloaded browser knows its simulation ID but may have lost the
         # transient task ID. Recover the latest persisted preparation task.

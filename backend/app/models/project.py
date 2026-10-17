@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 from enum import Enum
 from dataclasses import dataclass, field, asdict
 from ..config import Config
+from ..utils.atomic_io import write_json_atomic
 
 
 class ProjectStatus(str, Enum):
@@ -176,8 +177,7 @@ class ProjectManager:
         project.updated_at = datetime.now().isoformat()
         meta_path = cls._get_project_meta_path(project.project_id)
         
-        with open(meta_path, 'w', encoding='utf-8') as f:
-            json.dump(project.to_dict(), f, ensure_ascii=False, indent=2)
+        write_json_atomic(meta_path, project.to_dict())
     
     @classmethod
     def get_project(cls, project_id: str) -> Optional[Project]:

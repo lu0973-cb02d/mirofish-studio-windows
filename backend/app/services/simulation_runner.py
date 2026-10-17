@@ -293,7 +293,79 @@ class SimulationRunner:
         # 尝试从文件加载
         state = cls._load_run_state(simulation_id)
         if state:
-            cls._run_states[simulation_id] = state
+            state = cls._reconcile_interrupted_run(state)
+            # A newer state may have been published while this one was read.
+            state = cls._run_states.setdefault(simulation_id, state)
+        return state
+
+    _ACTIVE_RUN_STATUSES = frozenset({
+        RunnerStatus.STARTING, RunnerStatus.RUNNING, RunnerStatus.PAUSED, RunnerStatus.STOPPING,
+    })
+
+    @classmethod
+    def _terminate_orphan(cls, simulation_id: str, pid: Optional[int]) -> bool:
+        """Stop a simulation process that outlived the engine which started it.
+
+        Only a process whose command line names this simulation's own config
+        file is touched, so a recycled PID is never harmed.
+        """
+        if not pid:
+            return False
+        try:
+            import psutil
+        except ImportError:
+            return False
+        config_path = os.path.normcase(os.path.abspath(
+            os.path.join(cls.RUN_STATE_DIR, simulation_id, "simulation_config.json")))
+        try:
+            process = psutil.Process(pid)
+            if not any(os.path.normcase(os.path.abspath(arg)) == config_path
+                       for arg in process.cmdline() if arg and not arg.startswith("-")):
+                return False
+            doomed = process.children(recursive=True) + [process]
+            for item in doomed:
+                try:
+                    item.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+            _, alive = psutil.wait_procs(doomed, timeout=5)
+            for item in alive:
+                try:
+                    item.kill()
+                except psutil.NoSuchProcess:
+                    pass
+            logger.warning(f"已清理上次引擎遗留的推演进程: simulation={simulation_id}, pid={pid}")
+            return True
+        except (psutil.Error, OSError):
+            return False
+
+    @classmethod
+    def _reconcile_interrupted_run(cls, state: SimulationRunState) -> SimulationRunState:
+        """Turn a persisted 'active' state with no owner into an explicit failure.
+
+        A run state is only read from disk by an engine that did not start the
+        run (or that already forgot it), so an active status here means the
+        previous engine or the computer stopped mid-run. Left alone it would be
+        shown as running forever and block a plain restart.
+        """
+        if state.runner_status not in cls._ACTIVE_RUN_STATUSES:
+            return state
+
+        cls._terminate_orphan(state.simulation_id, state.process_pid)
+        state.runner_status = RunnerStatus.FAILED
+        state.twitter_running = False
+        state.reddit_running = False
+        state.completed_at = datetime.now().isoformat()
+        state.error = (
+            f"推演在引擎或电脑重启时被中断（已完成到第 {state.current_round}/{state.total_rounds} 轮）。"
+            "已写入的记录已保留；可以重新运行，图谱、人设和配置无需重新生成。"
+        )
+        with cls._state_write_lock:
+            published = cls._run_states.get(state.simulation_id)
+            if published is not None:
+                return published
+            cls._save_run_state(state)
+        cls._sync_simulation_status(state.simulation_id, RunnerStatus.FAILED, state.error)
         return state
     
     @classmethod
@@ -1725,6 +1797,12 @@ class SimulationRunner:
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
+            return False
+
+        # env_status.json survives a crash, so it can claim "alive" for an
+        # environment nobody owns any more. Interviews need the live process.
+        process = cls._processes.get(simulation_id)
+        if process is None or process.poll() is not None:
             return False
 
         ipc_client = SimulationIPCClient(sim_dir)

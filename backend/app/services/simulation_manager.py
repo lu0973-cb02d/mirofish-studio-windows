@@ -13,6 +13,7 @@ from datetime import datetime
 from enum import Enum
 
 from ..config import Config
+from ..utils.atomic_io import write_json_atomic
 from ..utils.logger import get_logger
 from .zep_entity_reader import ZepEntityReader, FilteredEntities
 from .oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
@@ -159,8 +160,7 @@ class SimulationManager:
         
         state.updated_at = datetime.now().isoformat()
         
-        with open(state_file, 'w', encoding='utf-8') as f:
-            json.dump(state.to_dict(), f, ensure_ascii=False, indent=2)
+        write_json_atomic(state_file, state.to_dict())
         
         self._simulations[state.simulation_id] = state
     
@@ -361,6 +361,18 @@ class SimulationManager:
                 output_platform=realtime_platform  # 输出格式
             )
             
+            # A few rule-based profiles are an accepted degradation, but when the
+            # model never answered (invalid key, exhausted quota, unreachable
+            # endpoint) the result is unusable and every later step would only
+            # spend more on the same failing provider.
+            if (use_llm_for_profiles and generator.llm_profile_fallbacks
+                    and not generator.llm_profile_successes):
+                state.status = SimulationStatus.FAILED
+                state.error = ("所有人设都未能通过模型生成（接口不可用、额度不足或密钥无效）。"
+                               "为避免继续消耗，已停止准备；请在「模型预设」中测试连接后重新准备。")
+                self._save_simulation_state(state)
+                raise ValueError(state.error)
+
             state.profiles_count = len(profiles)
             state.profiles_generated = len(profiles) > 0
             self._save_simulation_state(state)

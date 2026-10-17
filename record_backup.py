@@ -129,6 +129,10 @@ def _record_files(uploads, *, include_wal=False):
         _safe_relative(relative)
         if source.name == ".gitkeep":
             continue
+        # In-flight atomic writes (".name.<random>.tmp") are replaced or removed
+        # within moments; archiving one would race with that rename.
+        if source.name.startswith(".") and source.name.endswith(".tmp"):
+            continue
         if source.name.endswith(("-wal", "-shm")):
             database = source.with_name(source.name.rsplit("-", 1)[0])
             if database.is_file() and database.suffix.lower() in {".db", ".sqlite", ".sqlite3"}:
