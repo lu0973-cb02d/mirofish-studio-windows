@@ -10,7 +10,7 @@ AGPL-3.0 允许个人或商业使用、修改和收费分发，但分发修改�
 
 ## 来源与版本
 
-- 上游来源快照：`source_info.json` 中记录的 MiroFish 主分支提交。
+- 上游来源快照：`source_info.json` 中记录的 MiroFish 主分支提交；与上游有差异的文件清单见 `docs/UPSTREAM_DELTA.md`（由 `scripts/upstream-delta.py` 生成）。
 - 本地体验层/Windows 桌面工作台版本：`1.1.0`。
 - 项目维护者不得把上游版权、商标或第三方依赖的许可证声明移除或误标为 MIT。
 

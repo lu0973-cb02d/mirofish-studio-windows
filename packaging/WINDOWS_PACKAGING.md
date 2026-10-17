@@ -31,6 +31,8 @@ npm run desktop:build
 
 正式入口是 `desktop/main.cjs`、`desktop/preload.cjs`、`desktop/electron-builder.*.json` 和 `scripts/stage-full-runtime.py`。`scripts/build-windows.ps1`、旧 YAML 配置及 `packaging/electron` 为迁移参考，不参与当前构建。
 
+核心更新包（后端、文案和界面，不含安装器与运行时）由 `core-release.yml` 在 `core-v*` 标签上单独发布，与本文的安装包流程互不触发，说明见 [核心更新](../docs/CORE_UPDATES.md)。
+
 ## 测试与发布
 
 本地源码检查可执行：

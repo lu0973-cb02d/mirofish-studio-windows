@@ -1,10 +1,12 @@
 # MiroFish Studio for Windows
 
+[English](./README.md) · **中文**
+
 面向 Windows 的 MiroFish 桌面工作台。通过独立软件窗口管理模型预设、Zep 连接、推演引擎和记录备份，提供托盘与窗口操作，无需打开浏览器控制台。
 
 本仓库是基于 [MiroFish](https://github.com/666ghj/MiroFish) 的**非官方 Windows 改版**。正式使用入口是桌面应用，安装包通过本仓库的 GitHub Releases 分发。
 
-[下载安装](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) · [使用说明](./STUDIO_README.md) · [版本说明](./RELEASE_NOTES.md) · [来源与许可证](./NOTICE.md)
+[下载安装](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) · [使用说明](./STUDIO_README.md) · [版本说明](./RELEASE_NOTES.md) · [变更记录](./CHANGELOG.md) · [来源与许可证](./NOTICE.md)
 
 ![MiroFish Studio Windows 桌面工作台](./static/image/studio-desktop.jpg)
 
@@ -28,7 +30,8 @@
 - **桌面工作台**：查看引擎状态，启动、停止或重启；深色侧栏、清晰状态、悬停与按下反馈、页面切换动画，支持系统减少动态效果设置。
 - **模型预设**：保存多组 Base URL、API Key 和模型名称，一键切换；获取服务商模型列表，也可手动填写。接口需兼容 OpenAI 聊天接口。
 - **Zep 连接**：保存多个连接、按项目分组；遇到授权拒绝、限流或暂时故障时冷却异常连接，并尝试符合条件的备用密钥。
-- **推演流程**：材料输入、图谱构建、环境准备、双线推演、报告与采访；集中查看本机项目和报告。
+- **推演流程**：材料输入、图谱构建、环境准备、双线推演、报告与采访；集中查看本机项目和报告。开始推演前会显示预计的模型请求次数（粗略估算）。
+- **核心更新**：MiroFish 推演核心可以在软件内更新，无需重新安装。更新包经过签名校验，每次启动前再次校验，新核心无法启动时自动回退。详见 [核心更新](./docs/CORE_UPDATES.md)。
 - **记录备份**：手动备份、按变化自动备份、文件哈希校验、恢复前回退备份及恢复失败回滚。
 
 ## 第一次使用
@@ -54,6 +57,7 @@ Full 版数据根目录为 %APPDATA%\mirofish-studio-desktop\data；Panel 使用
 | studio_data | 模型与 Zep 配置、运行信息 |
 | backend/uploads | 项目材料、推演记录与报告 |
 | record_backups | 本地记录备份 |
+| core | 已安装的核心更新 |
 
 Full Portable 的数据不会随 EXE 文件一起搬迁。换电脑或换 Windows 用户时，应通过记录备份迁移数据并重新填写密钥；不要将 .env、配置、上传文件或备份提交到公开仓库。
 
@@ -61,7 +65,7 @@ Full Portable 的数据不会随 EXE 文件一起搬迁。换电脑或换 Window
 
 工作台运行时每 15 分钟检查记录变化，有变化才自动备份；保留最近 20 份自动备份，手动备份不会自动清理。恢复前需停止引擎；系统先备份当前记录，再校验并恢复所选备份。
 
-短暂断线或重新打开工作台后，可以读取仍在运行的任务和已保存记录。**程序崩溃或电脑关机后，不保证从中间轮次续跑**；恢复记录也不等于恢复内存中的采访环境。
+短暂断线或重新打开工作台后，可以读取仍在运行的任务和已保存记录。**程序崩溃或电脑关机后，不保证从中间轮次续跑**：该推演会显示为已中断并标明停在第几轮，遗留的推演进程会被停止，可以从已准备好的状态重新运行，无需重新生成图谱、人设和配置。恢复记录也不等于恢复内存中的采访环境。
 
 记录备份不包含 API Key，也不包含 Zep 云端图谱内容。原 Zep 账号或云端图谱不可用时，仅恢复本地备份无法恢复云端访问。本机备份也无法防止整块磁盘损坏，重要备份请另存一份。详细操作见 [工作台使用说明](./STUDIO_README.md)。
 
@@ -85,13 +89,14 @@ npm run desktop:build
 
 ~~~powershell
 uv run --project backend --frozen python -m pytest -q
+npm --prefix frontend test
 python scripts/audit-release.py
 ~~~
 
-GitHub Actions 按发布标签签出源码，执行测试、扫描、构建和全量安装包启动/卸载检查，核对上传文件哈希后发布。具体入口及验收边界见 [Windows 打包说明](./packaging/WINDOWS_PACKAGING.md) 和 [桌面端开发说明](./desktop/README.md)。SHA256SUMS.txt 以对应 Release 附件为准，本地重新构建的文件哈希可能不同。
+每次推送和 Pull Request 都会自动运行这些检查（`.github/workflows/ci.yml`）。GitHub Actions 按发布标签签出源码，执行测试、扫描、构建和全量安装包启动/卸载检查，核对上传文件哈希后发布。具体入口及验收边界见 [Windows 打包说明](./packaging/WINDOWS_PACKAGING.md) 和 [桌面端开发说明](./desktop/README.md)。SHA256SUMS.txt 以对应 Release 附件为准，本地重新构建的文件哈希可能不同。
 
 ## 许可证与上游来源
 
-仓库主体按 [GNU AGPL-3.0](./LICENSE) 发布，保留上游版权与许可证声明；第三方运行时和依赖按各自许可证分发。Windows 桌面体验层及本地流程改动的说明见 [NOTICE.md](./NOTICE.md)，采用的上游源码快照见 [source_info.json](./source_info.json)。
+仓库主体按 [GNU AGPL-3.0](./LICENSE) 发布，保留上游版权与许可证声明；第三方运行时和依赖按各自许可证分发。Windows 桌面体验层及本地流程改动的说明见 [NOTICE.md](./NOTICE.md)，采用的上游源码快照见 [source_info.json](./source_info.json)，与上游有差异的文件见 [docs/UPSTREAM_DELTA.md](./docs/UPSTREAM_DELTA.md)。
 
 本项目不是 MiroFish 官方 Windows 发行版。请在[本仓库 Issues](https://github.com/lu0973-cb02d/mirofish-studio-windows/issues)反馈桌面版问题；提交日志或截图前请移除密钥、个人材料和推演隐私内容。

@@ -1,75 +1,81 @@
 # MiroFish Studio for Windows
 
-面向 Windows 的 MiroFish 桌面工作台。通过独立软件窗口管理模型预设、Zep 连接、推演引擎和记录备份，提供托盘与窗口操作，无需打开浏览器控制台。
+**English** · [中文](./README-ZH.md)
 
-本仓库是基于 [MiroFish](https://github.com/666ghj/MiroFish) 的**非官方 Windows 改版**。正式使用入口是桌面应用，安装包通过本仓库的 GitHub Releases 分发。
+A desktop workbench for MiroFish on Windows. It manages model presets, Zep connections, the simulation engine and record backups from a standalone application window with a tray icon, so you never need a browser console.
 
-[下载安装](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) · [使用说明](./STUDIO_README.md) · [版本说明](./RELEASE_NOTES.md) · [来源与许可证](./NOTICE.md)
+This repository is an **unofficial Windows adaptation** of [MiroFish](https://github.com/666ghj/MiroFish). The desktop application is the supported way to use it, and installers are distributed through this repository's GitHub Releases.
 
-![MiroFish Studio Windows 桌面工作台](./static/image/studio-desktop.jpg)
+[Download](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) · [User guide (中文)](./STUDIO_README.md) · [Release notes (中文)](./RELEASE_NOTES.md) · [Changes](./CHANGELOG.md) · [Source and licence](./NOTICE.md)
 
-## 选择安装包
+![MiroFish Studio Windows desktop workbench](./static/image/studio-desktop.jpg)
 
-支持 Windows x64。首次使用推荐 **Full Setup**。
+The application interface and the user guide are in Chinese.
 
-| Release 附件 | 用途 | 运行条件 |
+## Choosing an installer
+
+Windows x64 only. **Full Setup** is recommended for a first install.
+
+| Release asset | Purpose | Requirements |
 | --- | --- | --- |
-| MiroFish-Studio-Full-版本号-Setup.exe | 安装完整桌面版，创建快捷方式 | 包含 Studio、MiroFish 核心、Python 及依赖，无需另装开发环境 |
-| MiroFish-Studio-Full-版本号-Portable.exe | 完整桌面版免安装运行 | 首次启动需要解压内置运行环境；数据仍保存在当前 Windows 用户目录 |
-| MiroFish-Studio-Panel-版本号-Setup.exe | 只安装桌面控制面板 | 需要已有的 Studio 兼容工作目录和后端运行环境 |
-| MiroFish-Studio-Panel-版本号-Portable.exe | 控制面板免安装运行 | 与 Panel Setup 相同，首次启动选择兼容工作目录 |
+| `MiroFish-Studio-Full-<version>-Setup.exe` | Installs the complete desktop application and creates shortcuts | Includes Studio, the MiroFish core, Python and all dependencies; no development environment needed |
+| `MiroFish-Studio-Full-<version>-Portable.exe` | Runs the complete application without installing | The bundled runtime is unpacked on first start; data still lives in the current Windows user's profile |
+| `MiroFish-Studio-Panel-<version>-Setup.exe` | Installs only the desktop control panel | Needs an existing Studio-compatible working directory with its backend runtime |
+| `MiroFish-Studio-Panel-<version>-Portable.exe` | Runs the control panel without installing | Same as Panel Setup; choose the working directory on first start |
 
-**Panel 不能直接配合未经适配的上游原版目录使用。** 所选目录需包含本改版的 local_studio/server.py、backend 和已安装依赖的 Python 环境；没有这些文件时请选择 Full。
+**The Panel cannot be used with an unmodified upstream directory.** The directory you choose must contain this adaptation's `local_studio/server.py`, `backend` and a Python environment with the dependencies installed. If it does not, use Full.
 
-在 [Releases](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases) 下载 EXE 附件。Source code 压缩包是源码，不是安装包。安装包当前未使用发布者证书签名，Windows 可能显示未知发布者提示；可使用同一 Release 附带的 SHA256SUMS.txt 核验下载文件。
+Download the EXE assets from [Releases](https://github.com/lu0973-cb02d/mirofish-studio-windows/releases). The "Source code" archives are source, not installers. The installers are currently not signed with a publisher certificate, so Windows may warn about an unknown publisher. You can verify a download against the `SHA256SUMS.txt` attached to the same release.
 
-## 主要功能
+## Features
 
-- **桌面工作台**：查看引擎状态，启动、停止或重启；深色侧栏、清晰状态、悬停与按下反馈、页面切换动画，支持系统减少动态效果设置。
-- **模型预设**：保存多组 Base URL、API Key 和模型名称，一键切换；获取服务商模型列表，也可手动填写。接口需兼容 OpenAI 聊天接口。
-- **Zep 连接**：保存多个连接、按项目分组；遇到授权拒绝、限流或暂时故障时冷却异常连接，并尝试符合条件的备用密钥。
-- **推演流程**：材料输入、图谱构建、环境准备、双线推演、报告与采访；集中查看本机项目和报告。
-- **记录备份**：手动备份、按变化自动备份、文件哈希校验、恢复前回退备份及恢复失败回滚。
+- **Desktop workbench**: see engine status and start, stop or restart it. Dark sidebar, clear status, hover and press feedback and page transitions, honouring the system "reduce motion" setting.
+- **Model presets**: save several base URL / API key / model combinations and switch with one click. Fetch the provider's model list or type a name. The endpoint must be OpenAI chat compatible.
+- **Zep connections**: save several connections, grouped by project. On authorisation failures, rate limits or transient faults, an unhealthy connection is cooled down and an eligible backup key is tried.
+- **Simulation workflow**: material input, graph building, environment preparation, two-platform simulation, report and interviews, with local projects and reports in one place. Before a run starts, the page shows a rough estimate of how many model requests it will make.
+- **Core updates**: the MiroFish core can be updated from inside the application without reinstalling. Bundles are signed and verified, checked again at every start, and rolled back automatically if the new core does not come up. See [docs/CORE_UPDATES.md](./docs/CORE_UPDATES.md) (中文).
+- **Record backups**: manual backups, change-driven automatic backups, file hash verification, a safety backup before every restore, and rollback if a restore fails.
 
-## 第一次使用
+## First use
 
-1. 安装 Full Setup 并打开 **MiroFish Studio（全量版）**；Panel 用户打开软件后先选择兼容工作目录。
-2. 在「模型预设」添加名称、服务地址和 API Key，点击「获取模型」或手动输入模型名，测试并保存，再「设为当前」。
-3. 在「Zep 连接」保存自己的密钥并设为当前。需要轮换时添加备用连接，开启自动切换。
-4. 回到「工作台」启动推演引擎，再点击「新建推演」，填写材料和研究问题。建议先用少量轮次确认自己的服务配置。
-5. 在「记录与备份」查看项目和备份。关闭窗口会留在托盘；需要停止后台服务时，使用软件或托盘中的退出操作。
+1. Install Full Setup and open **MiroFish Studio (Full)**. Panel users choose a compatible working directory on first start.
+2. Under "Model presets", add a name, service address and API key, fetch or type the model name, test, save, then "set as current".
+3. Under "Zep connections", save your own key and make it current. To rotate keys, add backups and turn on automatic switching.
+4. Back on the workbench, start the engine, then "New simulation" and fill in the material and your question. Try a small number of rounds first to check your own service configuration.
+5. Use "Records and backups" to review projects and backups. Closing the window keeps the application in the tray; use the quit action in the application or the tray menu to stop background services.
 
-连接测试会发送实际请求，模型测试和推演可能产生服务商费用。本版本未使用真实模型或 Zep 密钥完成付费推演验收；请先测试你自己的接口配置。
+Connection tests send real requests, and model tests and simulations may incur charges from your provider. This release has not been acceptance-tested with real model or Zep keys on a paid simulation, so test your own endpoints first.
 
-同一 Zep 连接组中的备用密钥必须能够访问同一项目和原图谱。不同账号或项目的密钥请分组保存；切换账号不能自动迁移云端图谱。任务进行中不能切换当前配置或重启引擎；已完成推演保留的采访环境在停止、重启或退出后会关闭。
+Backup keys in the same Zep connection group must be able to reach the same project and the original graph. Keep keys for different accounts or projects in separate groups; switching accounts cannot migrate a cloud graph. While a task is running you cannot switch the current configuration or restart the engine. Interview environments kept after a finished simulation close when the engine is stopped, restarted or quit.
 
-## 隐私与数据位置
+## Privacy and data locations
 
-API Key 使用当前 Windows 用户的 DPAPI 加密保存，不在编辑界面回显已有密钥。调用模型与 Zep 时，密钥和必要材料会发送给你配置的服务，因此请使用可信的服务地址。发布范围是程序源码、界面和通用依赖，首次使用需自行填写连接配置。
+API keys are encrypted with the current Windows user's DPAPI and are never echoed back in the editor. Keys and the necessary material are sent to the services you configure when calling models and Zep, so use trusted addresses. What is published is source code, interface and generic dependencies; you enter your own connections on first use.
 
-Full 版数据根目录为 %APPDATA%\mirofish-studio-desktop\data；Panel 使用所选工作目录保存数据。以下路径相对于各自的数据根目录：
+The Full edition's data root is `%APPDATA%\mirofish-studio-desktop\data`. The Panel uses the working directory you chose. Paths below are relative to each data root:
 
-| 路径 | 内容 |
+| Path | Contents |
 | --- | --- |
-| studio_data | 模型与 Zep 配置、运行信息 |
-| backend/uploads | 项目材料、推演记录与报告 |
-| record_backups | 本地记录备份 |
+| `studio_data` | Model and Zep configuration, runtime information |
+| `backend/uploads` | Project material, simulation records and reports |
+| `record_backups` | Local record backups |
+| `core` | Installed core updates |
 
-Full Portable 的数据不会随 EXE 文件一起搬迁。换电脑或换 Windows 用户时，应通过记录备份迁移数据并重新填写密钥；不要将 .env、配置、上传文件或备份提交到公开仓库。
+Full Portable data does not travel with the EXE. To move to another computer or Windows user, use record backups and enter keys again. Never commit `.env`, configuration, uploads or backups to a public repository.
 
-## 备份恢复与中断边界
+## Backups, recovery and interruptions
 
-工作台运行时每 15 分钟检查记录变化，有变化才自动备份；保留最近 20 份自动备份，手动备份不会自动清理。恢复前需停止引擎；系统先备份当前记录，再校验并恢复所选备份。
+While the workbench is open it checks for changed records every 15 minutes and backs up only if something changed; the latest 20 automatic backups are kept and manual backups are never pruned. Stop the engine before restoring; the current records are backed up first, then the chosen backup is verified and restored.
 
-短暂断线或重新打开工作台后，可以读取仍在运行的任务和已保存记录。**程序崩溃或电脑关机后，不保证从中间轮次续跑**；恢复记录也不等于恢复内存中的采访环境。
+After a short disconnection, or when you reopen the workbench, running tasks and saved records can be read again. **After a crash or power-off, a simulation is not guaranteed to resume from a middle round.** It is shown as interrupted with the round it reached, any simulation process left running is stopped, and you can re-run it from the prepared state without regenerating the graph, personas or configuration. Restoring records does not restore in-memory interview environments.
 
-记录备份不包含 API Key，也不包含 Zep 云端图谱内容。原 Zep 账号或云端图谱不可用时，仅恢复本地备份无法恢复云端访问。本机备份也无法防止整块磁盘损坏，重要备份请另存一份。详细操作见 [工作台使用说明](./STUDIO_README.md)。
+Backups contain no API keys and no Zep cloud graph content. If the original Zep account or cloud graph is unavailable, a local backup cannot restore cloud access. A local backup also does not protect against a failed disk, so keep a copy of anything important elsewhere. See the [user guide](./STUDIO_README.md) for details.
 
-## 从源码构建
+## Building from source
 
-以下步骤面向开发者。普通使用者直接下载安装包即可。
+For developers; ordinary users should download an installer.
 
-构建环境：Windows x64、Node.js 22、Python 3.11 x64、uv。在不含个人配置或记录的源码副本中，从仓库根目录依次执行：
+You need Windows x64, Node.js 22, Python 3.11 x64 and uv. From the repository root, in a source copy that contains no personal configuration or records:
 
 ~~~powershell
 npm ci --prefix frontend
@@ -79,19 +85,20 @@ npm --prefix frontend run build
 npm run desktop:build
 ~~~
 
-每一步成功后再继续。输出位于 dist-installers/panel 和 dist-installers/full。仅构建一版可使用 npm run desktop:build:control 或 npm run desktop:build:full；桌面开发预览使用 npm run desktop:dev。
+Continue only after each step succeeds. Output goes to `dist-installers/panel` and `dist-installers/full`. To build just one edition use `npm run desktop:build:control` or `npm run desktop:build:full`; use `npm run desktop:dev` for a desktop development preview.
 
-源码测试：
+Source tests:
 
 ~~~powershell
 uv run --project backend --frozen python -m pytest -q
+npm --prefix frontend test
 python scripts/audit-release.py
 ~~~
 
-GitHub Actions 按发布标签签出源码，执行测试、扫描、构建和全量安装包启动/卸载检查，核对上传文件哈希后发布。具体入口及验收边界见 [Windows 打包说明](./packaging/WINDOWS_PACKAGING.md) 和 [桌面端开发说明](./desktop/README.md)。SHA256SUMS.txt 以对应 Release 附件为准，本地重新构建的文件哈希可能不同。
+Continuous integration runs these on every push and pull request (`.github/workflows/ci.yml`). The release workflow checks out the source at the release tag, runs tests and scans, builds the installers, checks that the Full edition installs, starts and uninstalls, verifies the hashes of the uploaded files, and then publishes. See [Windows packaging](./packaging/WINDOWS_PACKAGING.md) and [desktop development](./desktop/README.md) for the entry points and the limits of what is verified. `SHA256SUMS.txt` belongs to the matching release assets; hashes of locally rebuilt files may differ.
 
-## 许可证与上游来源
+## Licence and upstream
 
-仓库主体按 [GNU AGPL-3.0](./LICENSE) 发布，保留上游版权与许可证声明；第三方运行时和依赖按各自许可证分发。Windows 桌面体验层及本地流程改动的说明见 [NOTICE.md](./NOTICE.md)，采用的上游源码快照见 [source_info.json](./source_info.json)。
+The repository is released under the [GNU AGPL-3.0](./LICENSE), retaining upstream copyright and licence notices; third-party runtimes and dependencies are distributed under their own licences. The Windows desktop layer and local workflow changes are described in [NOTICE.md](./NOTICE.md), the upstream snapshot in [source_info.json](./source_info.json), and the files that differ from it in [docs/UPSTREAM_DELTA.md](./docs/UPSTREAM_DELTA.md).
 
-本项目不是 MiroFish 官方 Windows 发行版。请在[本仓库 Issues](https://github.com/lu0973-cb02d/mirofish-studio-windows/issues)反馈桌面版问题；提交日志或截图前请移除密钥、个人材料和推演隐私内容。
+This project is not an official MiroFish Windows distribution. Report desktop issues in this repository's [Issues](https://github.com/lu0973-cb02d/mirofish-studio-windows/issues); remove keys, personal material and simulation content from logs and screenshots first.
