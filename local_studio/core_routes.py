@@ -1,7 +1,6 @@
 """HTTP surface for core updates and the switch procedure behind it."""
 from __future__ import annotations
 
-import threading
 import time
 import uuid
 from pathlib import Path
